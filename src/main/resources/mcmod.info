@@ -1,0 +1,20 @@
+[
+{
+  "modid": "ModAnalyzer",
+  "name": "ModAnalyzer",
+  "description": "Analyzes your mods",
+  "version": "${project.version}",
+  "mcversion": "${minecraft.version}",
+  "url": "http://github.com/agaricusb/ModAnalyzer",
+  "updateUrl": "",
+  "authors": [
+    "agaricus"
+  ],
+  "screenshots": [
+  ],
+  "parent":"",
+  "dependencies": [
+  "mod_MinecraftForge"
+  ]
+}
+]

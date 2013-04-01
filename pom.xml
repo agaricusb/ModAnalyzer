@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>agaricus.mods</groupId>
+  <artifactId>ModAnalyzer</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <name>ModAnalyzer</name>
+  <url>http://github.com/agaricusb/ModAnalyzer</url>
+
+  <parent>
+    <groupId>net.md-5</groupId>
+    <artifactId>ForgeMod</artifactId>
+    <version>1.5-7.7.1-SNAPSHOT</version>
+  </parent>
+
+  <repositories>
+    <repository>
+      <id>sonatype-oss-public</id>
+      <url>https://oss.sonatype.org/content/groups/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+  </repositories>
+
+  <build>
+   <resources>
+    <resource>
+     <directory>src/main/resources</directory>
+     <filtering>true</filtering>
+    </resource>
+   </resources>
+  </build>
+</project>
