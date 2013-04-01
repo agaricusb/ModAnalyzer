@@ -5,7 +5,8 @@ FORGE_VERSION = "7.7.1.624"
 
 TEST_SERVER_ROOT = "temp-server"
 TEST_SERVER_FILE = "minecraft_server+forge.jar"
-TEST_SERVER_CMD = "java -mx2G -jar %s"
+TEST_SERVER_CMD = "java -mx2G -jar %s nogui"
+ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 
 ALL_MODS_DIR = "allmods"
 
@@ -44,18 +45,24 @@ def runServer():
     os.system(TEST_SERVER_CMD % (TEST_SERVER_FILE,))
     os.chdir(d)
 
-
 def analyzeMod(fn):
+    # clean
     modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
     if os.path.exists(modsFolder):
         shutil.rmtree(modsFolder)
     os.mkdir(modsFolder)
+    configFolder = os.path.join(TEST_SERVER_ROOT, "config")
+    if os.path.exists(configFolder):
+        shutil.rmtree(configFolder)
 
+    # install analyzer
+    shutil.copyfile(os.path.join("target", ANALYZER_FILENAME), os.path.join(modsFolder, ANALYZER_FILENAME))
+
+    # install mod
     shutil.copyfile(fn, os.path.join(modsFolder, os.path.basename(fn)))
 
+    # running the server will load the analyzer, then quit
     runServer()
-
-    raise SystemExit
 
 def getMods():
     if not os.path.exists(ALL_MODS_DIR):
@@ -67,12 +74,19 @@ def getMods():
     return mods
 
 def main():
+    # setup analyzer
+    os.system("mvn initialize -P -built")
+    os.system("mvn package")
+
+    # setup server
     server = os.path.join(TEST_SERVER_ROOT, TEST_SERVER_FILE)
     if not os.path.exists(server):
         if not os.path.exists(TEST_SERVER_ROOT):
             os.mkdir(TEST_SERVER_ROOT)
         setupServer(server)
     print "Using server at:",server
+
+
     for mod in getMods():
         analyzeMod(mod)
 
