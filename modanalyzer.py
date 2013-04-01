@@ -8,13 +8,18 @@ TEST_SERVER_ROOT = "test-server"
 import os, urllib, zipfile, urllib2, tempfile
 
 def setupServer():
-    versionPath = MC_VERSION.replace(".", "_")
-    url = "http://assets.minecraft.net/%s/minecraft_server.jar" % (versionPath,)
-    mcFile = tempfile.mktemp()
+    mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
+    print mcZip.namelist()
+    
+    forgeZip = getURLZip("http://files.minecraftforge.net/minecraftforge/minecraftforge-universal-%s-%s.zip" % (MC_VERSION, FORGE_VERSION))
+    print forgeZip.namelist()
+
+def getURLZip(url):
+    f = tempfile.mktemp()
     print "Retrieving %s..." % (url,)
-    urllib.urlretrieve(url, mcFile)
-    with zipfile.ZipFile(mcFile, 'r') as mcZip:
-        print mcZip.namelist()
+    urllib.urlretrieve(url, f)
+    return zipfile.ZipFile(f, 'r')
+
 
 def main():
     if not os.path.exists(os.path.join(TEST_SERVER_ROOT, "minecraft_server.jar")):
