@@ -16,8 +16,10 @@ import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
+import net.minecraft.enchantment.Enchantment;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.world.biome.BiomeGenBase;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -127,6 +129,47 @@ public class ModAnalyzer {
                 put("isRepairable", item.isRepairable());
             }
         }
+
+        for (int i = 0; i < BiomeGenBase.biomeList.length; ++i) {
+            BiomeGenBase biome = BiomeGenBase.biomeList[i];
+            if (biome != null) {
+                setObject("biome", i);
+                put("id", biome.biomeID);
+                put("name", biome.biomeName);
+                put("color", biome.color);
+                put("topBlock", biome.topBlock); //The block expected to be on the top of this biome
+                put("fillerBlock" ,biome.fillerBlock); //The block to fill spots in when not on the top
+                //field_76754_C
+                put("minHeight", biome.minHeight);
+                put("maxHeight", biome.maxHeight);
+                put("temperature", biome.temperature);
+                put("rainfall", biome.rainfall);
+                put("waterColorMultiplier", biome.waterColorMultiplier);
+                //put("decorator", biome.theBiomeDecorator);
+
+                put("enableSnow", biome.getEnableSnow());
+                put("canSpawnLightningBolt", biome.canSpawnLightningBolt());
+                put("isHighHumidity", biome.isHighHumidity());
+                put("spawningChance", biome.getSpawningChance());
+                put("intRainfall", biome.getIntRainfall());
+                put("intTemperature", biome.getIntTemperature());
+            }
+        }
+
+        for (int i = 0; i < Enchantment.enchantmentsList.length; ++i) {
+            Enchantment ench = Enchantment.enchantmentsList[i];
+            if (ench != null) {
+                setObject("enchantment", i);
+                put("id", ench.effectId);
+                put("weight", ench.getWeight());
+                put("minLevel", ench.getMinLevel());
+                put("maxLevel", ench.getMaxLevel());
+                put("name", ench.getName());
+                put("translatedName", ench.getTranslatedName(1));
+            }
+        }
+
+        // TODO: recipes
 
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
