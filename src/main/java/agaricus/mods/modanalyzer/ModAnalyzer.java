@@ -44,59 +44,49 @@ public class ModAnalyzer {
         for (int i = 0; i < Block.blocksList.length; ++i) {
             Block block = Block.blocksList[i];
             if (block != null) {
-
-                /*
-                blocksBuilder.withElement(Integer.toString(i), anObjectBuilder()
-                        .withField("id", num(i))
-                        .withField("unlocalizedName", aStringBuilder(block.getUnlocalizedName()))
-                        .withField("localizedName", aStringBuilder(block.getLocalizedName()))
-                        .withField("hardness", num(block.blockHardness))
-                        .withField("material", aStringBuilder();*/
-
-                JsonNode blockNode = object(
-                        field("id", number(i)), /** ID of the block. */
-                        field("resistence", number(Float.toString(block.blockHardness))), /** Indicates the blocks resistance to explosions. */
-                        field("enableStats", booleanNode(block.getEnableStats())),
-                        field("needsRandomTick", booleanNode(block.getTickRandomly())),
+                blocksBuilder.withElement(anObjectBuilder()
+                        .withField("id", aNumberBuilder(""+i)) //ID of the block.
+                        .withField("resistence", aNumberBuilder(""+block.blockHardness)) //Indicates the blocks resistance to explosions.
+                        .withField("enableStats", aBooleanBuilder(block.getEnableStats()))
+                        .withField("needsRandomTick", aBooleanBuilder(block.getTickRandomly()))
                         //isBlockContainer
                         //coords
-                        field("bounds", string(String.format("%f-%f,%f-%f,%f-%f",
+                        .withField("bounds", aStringBuilder(String.format("%f-%f,%f-%f,%f-%f",
                                 block.getBlockBoundsMinX(), block.getBlockBoundsMaxX(),
                                 block.getBlockBoundsMinY(), block.getBlockBoundsMaxY(),
                                 block.getBlockBoundsMinZ(), block.getBlockBoundsMaxZ())
-                                )),
-                        field("stepSound", string(""+block.stepSound)),
-                        field("particleGravity", number(Float.toString(block.blockParticleGravity))),
-                        field("material", string(""+block.blockMaterial)), /** Indicates how many hits it takes to break a block. */
-                        field("slipperiness", number(Float.toString(block.slipperiness))),
+                                ))
+                        .withField("stepSound", aStringBuilder(""+block.stepSound))
+                        .withField("particleGravity", aNumberBuilder(""+block.blockParticleGravity))
+                        .withField("material", aStringBuilder(""+block.blockMaterial)) //Indicates how many hits it takes to break a block. 
+                        .withField("slipperiness", aNumberBuilder(Float.toString(block.slipperiness)))
 
-                        field("unlocalizedName", string(block.getUnlocalizedName())), /** Returns the unlocalized name of this block */
+                        .withField("unlocalizedName", aStringBuilder(block.getUnlocalizedName())) //Returns the unlocalized name of this block 
                         //blockIcon?
 
-                        field("isNormalCube", booleanNode(Block.isNormalCube(i))),
-                        field("renderAsNormalBlock", booleanNode(block.renderAsNormalBlock())), /** If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc */
-                        field("renderType", number(block.getRenderType())), /** The type of render function that is called for this block */
+                        .withField("isNormalCube", aBooleanBuilder(Block.isNormalCube(i)))
+                        .withField("renderAsNormalBlock", aBooleanBuilder(block.renderAsNormalBlock())) //If this block doesn't render as an ordinary block it will return False (examples: signs, buttons, stairs, etc 
+                        .withField("renderType", aNumberBuilder(""+block.getRenderType())) //The type of render function that is called for this block 
 
-                        field("localizedName", string(block.getLocalizedName())), /** Gets the localized name of this block. Used for the statistics page */
-                        field("hardness", number(Float.toString(block.blockHardness))), /** Indicates how many hits it takes to break a block. */
+                        .withField("localizedName", aStringBuilder(block.getLocalizedName())) //Gets the localized name of this block. Used for the statistics page 
+                        .withField("hardness", aNumberBuilder(""+block.blockHardness)) //Indicates how many hits it takes to break a block. 
 
-                        field("hasTileEntity", booleanNode(block.hasTileEntity(0))),
-                        field("opaqueCube", booleanNode(block.isOpaqueCube())), /** Is this block (a) opaque and (b) a full 1m cube?   */
-                        field("canCollideCheck", booleanNode(block.canCollideCheck(0, false))), /** Returns whether this block is collideable based on the arguments passed in  **/
-                        field("isCollidable", booleanNode(block.isCollidable())), /** Returns if this block is collidable (only used by Fire). */
-                        //field("tickRate", number(block.tickRate(null))))
-                        field("quantityDropped", number(block.quantityDropped(random))),
-                        field("damageDropped", number(block.damageDropped(0))),
-                        //field("explosionResistance", number(Float.toString(block.getExplosionResistance(null))))
-                        field("canProvidePower", booleanNode(block.canProvidePower())),
+                        .withField("hasTileEntity", aBooleanBuilder(block.hasTileEntity(0)))
+                        .withField("opaqueCube", aBooleanBuilder(block.isOpaqueCube())) //Is this block (a) opaque and (b) a full 1m cube?   
+                        .withField("canCollideCheck", aBooleanBuilder(block.canCollideCheck(0, false))) //Returns whether this block is collideable based on the arguments passed in  *
+                        .withField("isCollidable", aBooleanBuilder(block.isCollidable())) //Returns if this block is collidable (only used by Fire). 
+                        //.withField("tickRate", aNumberBuilder(block.tickRate(null))))
+                        .withField("quantityDropped", aNumberBuilder(""+block.quantityDropped(random)))
+                        .withField("damageDropped", aNumberBuilder(""+block.damageDropped(0)))
+                        //.withField("explosionResistance", aNumberBuilder(""+block.getExplosionResistance(null)))
+                        .withField("canProvidePower", aBooleanBuilder(block.canProvidePower()))
                         //canSilkHarvest
-                        field("mobilityFlag", number(block.getMobilityFlag())), /** Returns the mobility information of the block, 0 = free, 1 = can't push but can move over, 2 = total immobility */
+                        .withField("mobilityFlag", aNumberBuilder(""+block.getMobilityFlag())) //Returns the mobility information of the block, 0 = free, 1 = can't push but can move over, 2 = total immobility 
                         //getSubBlocks
                         //func_82506_l
-                        //field("canDropFromExplosion", boolea(block.canDropFromExplosion(null))),
-                        field("hasComparatorInputOverride", booleanNode(block.hasComparatorInputOverride())) /** If this returns true, then comparators facing away from this block will use the value from getComparatorInputOverride instead of the actual redstone signal strength */
-                        );
-                //blocksBuilder.withElement(
+                        //.withField("canDropFromExplosion", boolea(block.canDropFromExplosion(null)))
+                        .withField("hasComparatorInputOverride", aBooleanBuilder(block.hasComparatorInputOverride())) //If this returns true, then comparators facing away from this block will use the value from getComparatorInputOverride instead of the actual redstone signal strength
+                    );
             }
         }
 
@@ -107,22 +97,16 @@ public class ModAnalyzer {
             }
         }
 
-        /*
-        JsonRootNode json =
+        JsonRootNode json = blocksBuilder.build();
         String jsonText = (new PrettyJsonFormatter()).format(json);
 
-        System.out.println("JSON="+jsonText);*/
+        System.out.println("JSON="+jsonText);
 
         Runtime.getRuntime().halt(0);
     }
 
-    // convenience method since argo requires a string
-    private JsonNodeBuilder<JsonNode> num(int n) {
-        return aNumberBuilder(Integer.toString(n));
-    }
-
-    private JsonNodeBuilder<JsonNode> num(float f) {
-        return aNumberBuilder(Float.toString(f));
+    private JsonNodeBuilder<JsonNode> aBooleanBuilder(boolean b) {
+        return b ? aTrueBuilder() : aFalseBuilder();
     }
 }
 
