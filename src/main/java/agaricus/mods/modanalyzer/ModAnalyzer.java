@@ -15,6 +15,7 @@ import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
 import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.block.Block;
+import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
 
 import java.util.Random;
@@ -52,9 +53,10 @@ public class ModAnalyzer {
                         block.getBlockBoundsMinX(), block.getBlockBoundsMaxX(),
                         block.getBlockBoundsMinY(), block.getBlockBoundsMaxY(),
                         block.getBlockBoundsMinZ(), block.getBlockBoundsMaxZ()));
-                put("stepSound", block.stepSound);
+                put("stepSound", block.stepSound.getStepSound());
                 put("particleGravity", block.blockParticleGravity);
-                put("material", block.blockMaterial); //Indicates how many hits it takes to break a block.
+                put("material", getMaterial(block.blockMaterial));
+
                 put("slipperiness", block.slipperiness);
 
                 put("unlocalizedName", block.getUnlocalizedName()); //Returns the unlocalized name of this block
@@ -106,6 +108,74 @@ public class ModAnalyzer {
     }
     private <T> void put(String key, T value) {
         stringBuilder.append(objectType + "\t" + objectName + "\t" + key + "\t" + value + "\n");
+    }
+
+    private String getMaterial(Material material) {
+        if (material == Material.grass) {
+            return "grass";
+        } else if (material == Material.ground) {
+            return "ground";
+        } else if (material == Material.wood) {
+            return "wood";
+        } else if (material == Material.rock) {
+            return "rock";
+        } else if (material == Material.iron) {
+            return "iron";
+        } else if (material == Material.anvil) {
+            return "anvil";
+        } else if (material == Material.water) {
+            return "water";
+        } else if (material == Material.lava) {
+            return "lava";
+        } else if (material == Material.leaves) {
+            return "leaves";
+        } else if (material == Material.plants) {
+            return "plants";
+        } else if (material == Material.vine) {
+            return "vine";
+        } else if (material == Material.sponge) {
+            return "sponge";
+        } else if (material == Material.cloth) {
+            return "cloth";
+        } else if (material == Material.fire) {
+            return "fire";
+        } else if (material == Material.sand) {
+            return "sand";
+        } else if (material == Material.circuits) {
+            return "circuits";
+        } else if (material == Material.glass) {
+            return "glass";
+        } else if (material == Material.redstoneLight) {
+            return "redstoneLight";
+        } else if (material == Material.tnt) {
+            return "tnt";
+        } else if (material == Material.coral) {
+            return "coral";
+        } else if (material == Material.ice) {
+            return "ice";
+        } else if (material == Material.snow) {
+            return "snow";
+        } else if (material == Material.craftedSnow) {
+            return "craftedSnow";
+        } else if (material == Material.cactus) {
+            return "cactus";
+        } else if (material == Material.clay) {
+            return "clay";
+        } else if (material == Material.pumpkin) {
+            return "pumpkin";
+        } else if (material == Material.dragonEgg) {
+            return "dragonEgg";
+        } else if (material == Material.portal) {
+            return "portal";
+        } else if (material == Material.cake) {
+            return "cake";
+        } else if (material == Material.web) {
+            return "web";
+        } else if (material == Material.piston) {
+            return "piston";
+        } else {
+            return material.getClass().getSimpleName();
+        }
     }
 }
 
