@@ -44,7 +44,7 @@ public class ModAnalyzer {
     public void postInit(FMLPostInitializationEvent event) {
         FMLLog.log(Level.FINE, "Loading ModAnalyzer...");
 
-        Random random = new Random();
+        Random random = new Random(0);
 
         for (int i = 0; i < Block.blocksList.length; ++i) {
             Block block = Block.blocksList[i];

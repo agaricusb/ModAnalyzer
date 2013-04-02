@@ -62,15 +62,17 @@ def analyzeMod(fn):
     shutil.copyfile(os.path.join("target", ANALYZER_FILENAME), os.path.join(modsFolder, ANALYZER_FILENAME))
 
     # install mod
-    shutil.copyfile(fn, os.path.join(modsFolder, os.path.basename(fn)))
+    if fn is not None:
+        shutil.copyfile(fn, os.path.join(modsFolder, getModName(fn)))
 
     # running the server will load the analyzer, then quit
     runServer()
 
-    # save
-    if not os.path.exists(DATA_DIR):
-        os.mkdir(DATA_DIR)
-    shutil.copy(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv"), os.path.join(DATA_DIR, "info-" + os.path.basename(fn) + ".csv"))
+def getModName(fn):
+    if fn is None:
+        return "vanilla"
+    else:
+        return os.path.basename(fn)
 
 def getMods():
     if not os.path.exists(ALL_MODS_DIR):
@@ -94,9 +96,20 @@ def main():
         setupServer(server)
     print "Using server at:",server
 
+    # analyze vanilla for reference
+    analyzeMod(None)
+    if not os.path.exists(DATA_DIR):
+        os.mkdir(DATA_DIR)
+    vanilla = file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
+
+    # save
+
     for mod in getMods():
         analyzeMod(mod)
-
+        with file(os.path.join(DATA_DIR, "info-" + getModName(mod) + ".csv"), "w") as f:
+            for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
+                if line in vanilla: continue   # skip unchanged vanilla content
+                f.write(line)
 
 if __name__ == "__main__":
     main()
