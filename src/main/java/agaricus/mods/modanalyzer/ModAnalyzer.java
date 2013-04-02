@@ -57,6 +57,16 @@ public class ModAnalyzer {
                 put("particleGravity", block.blockParticleGravity);
                 put("material", getMaterial(block.blockMaterial));
 
+                put("isLiquid", block.blockMaterial.isLiquid());
+                put("isSolid", block.blockMaterial.isSolid());
+                put("canBlockGrass", block.blockMaterial.getCanBlockGrass());
+                put("blocksMovement", block.blockMaterial.blocksMovement());
+                put("canBurn", block.blockMaterial.getCanBurn());
+                put("isReplaceable", block.blockMaterial.isReplaceable());
+                put("isOpaque", block.blockMaterial.isOpaque());
+                put("isToolNotRequired", block.blockMaterial.isToolNotRequired());
+                //func_85157_q
+
                 put("slipperiness", block.slipperiness);
 
                 put("unlocalizedName", block.getUnlocalizedName()); //Returns the unlocalized name of this block
