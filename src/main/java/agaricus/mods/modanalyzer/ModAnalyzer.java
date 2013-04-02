@@ -45,7 +45,7 @@ public class ModAnalyzer {
 
         for (int i = 0; i < Block.blocksList.length; ++i) {
             Block block = Block.blocksList[i];
-            if (block != null) {
+            if (block != null && !block.getUnlocalizedName().equals("tile.ForgeFiller")) {
                 setObject("block", i);
                 put("id", i); //ID of the block.
                 put("resistence", block.blockHardness); //Indicates the blocks resistance to explosions.
