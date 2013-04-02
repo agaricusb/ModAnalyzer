@@ -9,6 +9,7 @@ TEST_SERVER_CMD = "java -mx2G -jar %s nogui"
 ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 
 ALL_MODS_DIR = "allmods"
+DATA_DIR = "data"
 
 import os, urllib, zipfile, urllib2, tempfile, shutil
 
@@ -40,10 +41,12 @@ def getURLZip(url):
     return zipfile.ZipFile(f, 'r')
 
 def runServer():
+    print "Starting server..."
     d = os.getcwd()
     os.chdir(TEST_SERVER_ROOT)
     os.system(TEST_SERVER_CMD % (TEST_SERVER_FILE,))
     os.chdir(d)
+    print "Server terminated"
 
 def analyzeMod(fn):
     # clean
@@ -63,6 +66,11 @@ def analyzeMod(fn):
 
     # running the server will load the analyzer, then quit
     runServer()
+
+    # save
+    if not os.path.exists(DATA_DIR):
+        os.mkdir(DATA_DIR)
+    shutil.copy(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv"), os.path.join(DATA_DIR, "info-" + os.path.basename(fn) + ".csv"))
 
 def getMods():
     if not os.path.exists(ALL_MODS_DIR):
@@ -85,7 +93,6 @@ def main():
             os.mkdir(TEST_SERVER_ROOT)
         setupServer(server)
     print "Using server at:",server
-
 
     for mod in getMods():
         analyzeMod(mod)

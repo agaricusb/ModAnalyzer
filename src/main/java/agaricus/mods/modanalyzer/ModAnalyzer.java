@@ -18,6 +18,10 @@ import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.item.Item;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Random;
 import java.util.logging.Level;
 
@@ -104,7 +108,13 @@ public class ModAnalyzer {
             }
         }
 
-        System.out.println("JSON="+stringBuilder.toString());
+        try {
+            BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
+            out.write(stringBuilder.toString());
+            out.close();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
 
         Runtime.getRuntime().halt(0);
     }
