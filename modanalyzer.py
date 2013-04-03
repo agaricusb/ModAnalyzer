@@ -11,7 +11,7 @@ ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 ALL_MODS_DIR = "allmods"
 DATA_DIR = "data"
 
-import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types
+import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types, pprint, sys
 
 def setupServer(serverFilename):
     mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
@@ -48,7 +48,7 @@ def runServer():
     os.chdir(d)
     print "Server terminated"
 
-def analyzeMod(fn):
+def analyzeMod(fn, others=[]):
     # clean
     modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
     if os.path.exists(modsFolder):
@@ -64,6 +64,10 @@ def analyzeMod(fn):
     # install mod
     if fn is not None:
         shutil.copyfile(fn, os.path.join(modsFolder, getModName(fn)))
+
+    # install deps
+    for other in others:
+        shutil.copyfile(other, os.path.join(modsFolder, getModName(other)))
 
     # running the server will load the analyzer, then quit
     runServer()
@@ -101,15 +105,19 @@ def readMcmodInfo(fn):
         mod = {"filename":fn, "sha256":h, "info":mcmod}
     return mod
 
-"""Get all dependent mod IDs from readMcmodInfo() result.""" # TODO: OO
-def getDeps(info):
-    deps = set()
+"""Get submod dict from a top-level mod info dict from readMcmodInfo()."""
+def getSubInfo(info):
     if isinstance(info["info"], types.DictType):
         subs = info["info"].get("modlist", [])  # AE - top-level dictionary
     else:
         subs = info["info"] # top-level array
+    return subs
 
-    for sub in subs:
+"""Get all dependent mod IDs from readMcmodInfo() result.""" # TODO: OO
+def getDeps(info):
+    deps = set()
+
+    for sub in getSubInfo(info):
         deps.update(set(sub.get("dependencies", [])))
 
     if "mod_MinecraftForge" in deps:
@@ -121,17 +129,38 @@ def getDeps(info):
 """Get all mod IDs in an mcmod readMcmodInfo()."""
 def getModIDs(info):
     ids = set()
-    for sub in info["info"]:
+    for sub in getSubInfo(info):
         if sub.has_key("modid"):
             ids.add(sub["modid"])
     return ids
 
 def main():
-    for mod in getMods():
-        info = readMcmodInfo(mod)
+
+    # gather dependencies
+    modid2fn = {}
+    fn2deps = {}
+    for fn in getMods():
+        info = readMcmodInfo(fn)
         deps = getDeps(info)
-        print mod,deps
-    raise SystemExit
+
+        for modid in getModIDs(info):
+            modid2fn[modid] = fn
+
+        fn2deps[fn] = deps
+        if len(deps) != 0:
+            print fn,deps
+
+    # build mod filename -> dependency filenames
+    fn2depsfn = {}
+    for fn, deps in fn2deps.iteritems():
+        for dep in deps:
+            if not modid2fn.has_key(dep):
+                print "Mod %s is missing dependency: %s. Cannot continue" % (fn, dep)
+                sys.exit(-1)
+
+            fn2depsfn[fn] = modid2fn[dep]
+
+        fn2depsfn[fn] = [modid2fn[dep] for dep in deps]
 
 
     # setup analyzer
@@ -153,10 +182,15 @@ def main():
     vanilla = file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
 
     for mod in getMods():
-        analyzeMod(mod)
+        deps = fn2depsfn[mod]
+        analyzeMod(mod, deps)
         with file(os.path.join(DATA_DIR, "info-" + getModName(mod) + ".csv"), "w") as f:
             for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
-                if line in vanilla: continue   # skip unchanged vanilla content
+                if line in vanilla: 
+                    # skip unchanged vanilla content
+                    continue
+                    # TODO: also skip unchanged content added by dependencies! (e.g. IC2, for IC2 addons)
+
                 f.write(line)
 
 if __name__ == "__main__":
