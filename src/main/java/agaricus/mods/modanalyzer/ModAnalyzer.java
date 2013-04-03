@@ -1,10 +1,5 @@
 package agaricus.mods.modanalyzer;
 
-import argo.format.JsonFormatter;
-import argo.format.PrettyJsonFormatter;
-import argo.jdom.*;
-import com.google.common.base.Joiner;
-import com.google.common.base.Objects;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.PostInit;
@@ -13,21 +8,22 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
-import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityList;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.world.biome.BiomeGenBase;
+import net.minecraftforge.oredict.OreDictionary;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.logging.Level;
 
 @Mod(modid = "ModAnalyzer", name = "ModAnalyzer", version = "1.0-SNAPSHOT") // TODO: version from resource
@@ -64,7 +60,7 @@ public class ModAnalyzer {
                         block.getBlockBoundsMinZ(), block.getBlockBoundsMaxZ()));
                 put("stepSound", block.stepSound.getStepSound());
                 put("particleGravity", block.blockParticleGravity);
-                put("material", getMaterial(block.blockMaterial));
+                put("material", toString(block.blockMaterial));
 
                 put("isLiquid", block.blockMaterial.isLiquid());
                 put("isSolid", block.blockMaterial.isSolid());
@@ -181,7 +177,21 @@ public class ModAnalyzer {
             put("class", entityClass.getName());
         }
 
-        // TODO: recipes
+        for (Map.Entry<Integer, ItemStack> entry : ((Map<Integer, ItemStack>) FurnaceRecipes.smelting().getSmeltingList()).entrySet()) {
+            int itemID = entry.getKey();
+            ItemStack output = entry.getValue();
+            setObject("recipes/smelting", itemID); // TODO: use item name as identifier instead?
+            put("output", toString(output));
+        }
+        for (Map.Entry<List<Integer>, ItemStack> entry : FurnaceRecipes.smelting().getMetaSmeltingList().entrySet()) {
+            int itemID = entry.getKey().get(0);
+            int meta = entry.getKey().get(1);
+            ItemStack output = entry.getValue();
+            setObject("recipes/smelting", itemID + ":" + meta);
+            put("output", toString(output));
+        }
+
+        // TODO: crafting recipes
 
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
@@ -205,7 +215,7 @@ public class ModAnalyzer {
         stringBuilder.append(objectType + "\t" + objectName + "\t" + key + "\t" + value + "\n");
     }
 
-    private String getMaterial(Material material) {
+    private String toString(Material material) {
         if (material == Material.grass) {
             return "grass";
         } else if (material == Material.ground) {
@@ -271,6 +281,29 @@ public class ModAnalyzer {
         } else {
             return material.getClass().getSimpleName();
         }
+    }
+
+    private String toString(ItemStack itemStack) {
+        if (itemStack == null) {
+            return "null";
+        }
+
+        StringBuilder sb = new StringBuilder();
+
+        sb.append(itemStack.itemID);
+        sb.append(':');
+
+        if (itemStack.getItemDamage() == OreDictionary.WILDCARD_VALUE) {
+            sb.append("*");
+        } else {
+            sb.append(itemStack.getItemDamage());
+        }
+
+        // TODO: dump NBT tags, if any present
+        // but what format? Norbert? http://www.reddit.com/r/admincraft/comments/1admu5/rfc_norbert_a_new_nbt_format/
+        // or something from smbarbour? or custom?
+
+        return sb.toString();
     }
 }
 
