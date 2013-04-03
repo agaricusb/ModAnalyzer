@@ -11,7 +11,7 @@ ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 ALL_MODS_DIR = "allmods"
 DATA_DIR = "data"
 
-import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib
+import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types
 
 def setupServer(serverFilename):
     mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
@@ -90,8 +90,8 @@ def readMcmodInfo(fn):
             try:
                 mcmod = json.loads(raw_json)
             except ValueError as e:
-                print raw_json
-                print "BROKEN JSON!",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
+                #print raw_json
+                #print "BROKEN JSON!",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
                 mcmod = []
         else:
             mcmod = []
@@ -101,10 +101,36 @@ def readMcmodInfo(fn):
         mod = {"filename":fn, "sha256":h, "info":mcmod}
     return mod
 
+"""Get all dependent mod IDs from readMcmodInfo() result.""" # TODO: OO
+def getDeps(info):
+    deps = set()
+    if isinstance(info["info"], types.DictType):
+        subs = info["info"].get("modlist", [])  # AE - top-level dictionary
+    else:
+        subs = info["info"] # top-level array
+
+    for sub in subs:
+        deps.update(set(sub.get("dependencies", [])))
+
+    if "mod_MinecraftForge" in deps:
+        # we always have this..
+        deps.remove("mod_MinecraftForge")
+
+    return deps
+
+"""Get all mod IDs in an mcmod readMcmodInfo()."""
+def getModIDs(info):
+    ids = set()
+    for sub in info["info"]:
+        if sub.has_key("modid"):
+            ids.add(sub["modid"])
+    return ids
+
 def main():
     for mod in getMods():
         info = readMcmodInfo(mod)
-        print info
+        deps = getDeps(info)
+        print mod,deps
     raise SystemExit
 
 
