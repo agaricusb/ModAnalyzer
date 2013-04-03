@@ -11,7 +11,7 @@ ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 ALL_MODS_DIR = "allmods"
 DATA_DIR = "data"
 
-import os, urllib, zipfile, urllib2, tempfile, shutil
+import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib
 
 def setupServer(serverFilename):
     mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
@@ -83,7 +83,31 @@ def getMods():
         mods.append(os.path.join(ALL_MODS_DIR, m))
     return mods
 
+def readMcmodInfo(fn):
+    with zipfile.ZipFile(fn) as modZip:
+        if "mcmod.info" in modZip.namelist():
+            raw_json = modZip.read("mcmod.info")
+            try:
+                mcmod = json.loads(raw_json)
+            except ValueError as e:
+                print raw_json
+                print "BROKEN JSON!",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
+                mcmod = []
+        else:
+            mcmod = []
+
+        # Filename and hash is essential
+        h = hashlib.sha256(file(fn).read()).hexdigest()
+        mod = {"filename":fn, "sha256":h, "info":mcmod}
+    return mod
+
 def main():
+    for mod in getMods():
+        info = readMcmodInfo(mod)
+        print info
+    raise SystemExit
+
+
     # setup analyzer
     os.system("mvn initialize -P -built")
     os.system("mvn package")
@@ -101,8 +125,6 @@ def main():
     if not os.path.exists(DATA_DIR):
         os.mkdir(DATA_DIR)
     vanilla = file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
-
-    # save
 
     for mod in getMods():
         analyzeMod(mod)
