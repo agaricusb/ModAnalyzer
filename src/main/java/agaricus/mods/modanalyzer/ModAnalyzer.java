@@ -42,6 +42,26 @@ public class ModAnalyzer {
     public void postInit(FMLPostInitializationEvent event) {
         FMLLog.log(Level.FINE, "Loading ModAnalyzer...");
 
+        dumpBlocks();
+        dumpItems();
+        dumpBiomes();
+        dumpEnchantments();
+        dumpEntities();
+        dumpSmeltingRecipes();
+        // TODO: crafting recipes
+
+        try {
+            BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
+            out.write(stringBuilder.toString());
+            out.close();
+        } catch (IOException ex) {
+            throw new RuntimeException(ex);
+        }
+
+        Runtime.getRuntime().halt(0);
+    }
+
+    private void dumpBlocks() {
         Random random = new Random(0);
 
         for (int i = 0; i < Block.blocksList.length; ++i) {
@@ -101,7 +121,9 @@ public class ModAnalyzer {
                 put("hasComparatorInputOverride", block.hasComparatorInputOverride()); //If this returns true, then comparators facing away from this block will use the value from getComparatorInputOverride instead of the actual redstone signal strength
             }
         }
+    }
 
+    private void dumpItems() {
         for (int i = 0; i < Item.itemsList.length; ++i) {
             Item item = Item.itemsList[i];
             if (item != null) {
@@ -127,7 +149,9 @@ public class ModAnalyzer {
                 put("isRepairable", item.isRepairable());
             }
         }
+    }
 
+    private void dumpBiomes() {
         for (int i = 0; i < BiomeGenBase.biomeList.length; ++i) {
             BiomeGenBase biome = BiomeGenBase.biomeList[i];
             if (biome != null) {
@@ -153,7 +177,9 @@ public class ModAnalyzer {
                 put("intTemperature", biome.getIntTemperature());
             }
         }
+    }
 
+    private void dumpEnchantments() {
         for (int i = 0; i < Enchantment.enchantmentsList.length; ++i) {
             Enchantment ench = Enchantment.enchantmentsList[i];
             if (ench != null) {
@@ -166,7 +192,9 @@ public class ModAnalyzer {
                 put("translatedName", ench.getTranslatedName(1));
             }
         }
+    }
 
+    private void dumpEntities() {
         for (Object entityIDObject : EntityList.IDtoClassMapping.keySet()) {
             Class entityClass = (Class) EntityList.IDtoClassMapping.get(entityIDObject);
             int entityID = ((Integer) entityIDObject).intValue();
@@ -176,7 +204,9 @@ public class ModAnalyzer {
             put("name", name);
             put("class", entityClass.getName());
         }
+    }
 
+    private void dumpSmeltingRecipes() {
         for (Map.Entry<Integer, ItemStack> entry : ((Map<Integer, ItemStack>) FurnaceRecipes.smelting().getSmeltingList()).entrySet()) {
             int itemID = entry.getKey();
             ItemStack output = entry.getValue();
@@ -190,18 +220,6 @@ public class ModAnalyzer {
             setObject("recipes/smelting", itemID + ":" + meta);
             put("output", toString(output));
         }
-
-        // TODO: crafting recipes
-
-        try {
-            BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
-            out.write(stringBuilder.toString());
-            out.close();
-        } catch (IOException ex) {
-            throw new RuntimeException(ex);
-        }
-
-        Runtime.getRuntime().halt(0);
     }
 
     private StringBuilder stringBuilder = new StringBuilder();
