@@ -17,6 +17,7 @@ import cpw.mods.fml.relauncher.ReflectionHelper;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
+import net.minecraft.entity.EntityList;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -26,6 +27,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Random;
+import java.util.Set;
 import java.util.logging.Level;
 
 @Mod(modid = "ModAnalyzer", name = "ModAnalyzer", version = "1.0-SNAPSHOT") // TODO: version from resource
@@ -167,6 +169,16 @@ public class ModAnalyzer {
                 put("name", ench.getName());
                 put("translatedName", ench.getTranslatedName(1));
             }
+        }
+
+        for (Object entityIDObject : EntityList.IDtoClassMapping.keySet()) {
+            Class entityClass = (Class) EntityList.IDtoClassMapping.get(entityIDObject);
+            int entityID = ((Integer) entityIDObject).intValue();
+            String name = (String) EntityList.classToStringMapping.get(entityClass);
+
+            setObject("entity", entityID);
+            put("name", name);
+            put("class", entityClass.getName());
         }
 
         // TODO: recipes
