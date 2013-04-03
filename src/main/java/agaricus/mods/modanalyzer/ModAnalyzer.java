@@ -48,6 +48,7 @@ public class ModAnalyzer {
         dumpEnchantments();
         dumpEntities();
         dumpSmeltingRecipes();
+        dumpOreDict();
         // TODO: crafting recipes
 
         try {
@@ -210,7 +211,7 @@ public class ModAnalyzer {
         for (Map.Entry<Integer, ItemStack> entry : ((Map<Integer, ItemStack>) FurnaceRecipes.smelting().getSmeltingList()).entrySet()) {
             int itemID = entry.getKey();
             ItemStack output = entry.getValue();
-            setObject("recipes/smelting", itemID); // TODO: use item name as identifier instead?
+            setObject("recipes/smelting", itemID);
             put("output", toString(output));
         }
         for (Map.Entry<List<Integer>, ItemStack> entry : FurnaceRecipes.smelting().getMetaSmeltingList().entrySet()) {
@@ -219,6 +220,16 @@ public class ModAnalyzer {
             ItemStack output = entry.getValue();
             setObject("recipes/smelting", itemID + ":" + meta);
             put("output", toString(output));
+        }
+    }
+
+    private void dumpOreDict() {
+        for (String oreName : OreDictionary.getOreNames()) {
+            for (ItemStack oreItem : OreDictionary.getOres(oreName)) {
+                // each item -> registered ore name
+                setObject("oredict", toString(oreItem));
+                put("name", oreName);
+            }
         }
     }
 
