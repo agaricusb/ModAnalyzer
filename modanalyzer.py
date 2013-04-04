@@ -140,7 +140,35 @@ def getModIDs(info):
 def getInfoFilename(mod):
     return os.path.join(DATA_DIR, getModName(mod) + ".csv")
 
+def saveModInfo(mod, skip):
+    lines = []
+    with file(getInfoFilename(mod), "w") as f:
+        for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
+            notUs = False
+            for s in skip:
+                if line in s:
+                    notUs = True
+                    break
+
+            if notUs:
+                # skip content added by our dependencies
+                continue
+
+            f.write(line)
+            lines.append(line)
+    return lines
+
+
 def main():
+
+    forceRescan = False
+
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "--force-rescan":
+            forceRescan = True # TODO: proper argument parsing
+        else:
+            print "Usage: %s [--force-rescan]" % (sys.argv[0],)
+            raise SystemExit
 
     # gather dependencies
     modid2fn = {}
@@ -170,8 +198,9 @@ def main():
 
 
     # setup analyzer
-    os.system("mvn initialize -P -built")
-    os.system("mvn package")
+    if not os.path.exists(os.path.join("target", ANALYZER_FILENAME)):
+        os.system("mvn initialize -P -built")
+        os.system("mvn package")
 
     # setup server
     server = os.path.join(TEST_SERVER_ROOT, TEST_SERVER_FILE)
@@ -192,6 +221,9 @@ def main():
     analyzedMods
     while len(modsToAnalyze) > 0:
         mod = modsToAnalyze.pop()
+        if not forceRescan and os.path.exists(getInfoFilename(mod)):
+            print "Skipping",mod
+            continue
         deps = fn2depsfn[mod]
         depsAnalyzed = [analyzedMods[None]]  # everything depends on vanilla
         for dep in deps:
@@ -210,25 +242,6 @@ def main():
                 
         analyzeMod(mod, deps)
         analyzedMods[mod] = saveModInfo(mod, depsAnalyzed)
-
-
-def saveModInfo(mod, skip):
-    lines = []
-    with file(getInfoFilename(mod), "w") as f:
-        for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
-            notUs = False
-            for s in skip:
-                if line in s:
-                    notUs = True
-                    break
-
-            if notUs:
-                # skip content added by our dependencies
-                continue
-
-            f.write(line)
-            lines.append(line)
-    return lines
 
 
 if __name__ == "__main__":
