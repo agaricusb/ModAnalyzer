@@ -119,10 +119,13 @@ def getDeps(info):
 
     for sub in getSubInfo(info):
         deps.update(set(sub.get("dependencies", [])))
+        deps.update(set(sub.get("dependancies", []))) # ohai iChun ;)
 
     if "mod_MinecraftForge" in deps:
         # we always have this..
         deps.remove("mod_MinecraftForge")
+    if "Forge" in deps:
+        deps.remove("Forge")
 
     return deps
 
