@@ -138,7 +138,7 @@ def getModIDs(info):
     return ids
 
 def getInfoFilename(mod):
-    return os.path.join(DATA_DIR, "info-" + getModName(mod) + ".csv")
+    return os.path.join(DATA_DIR, getModName(mod) + ".csv")
 
 def main():
 
