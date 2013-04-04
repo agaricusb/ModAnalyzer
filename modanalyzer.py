@@ -49,6 +49,7 @@ def runServer():
     print "Server terminated"
 
 def analyzeMod(fn, others=[]):
+    print "Analyzing %s..." % (fn,)
     # clean
     modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
     if os.path.exists(modsFolder):
@@ -113,6 +114,13 @@ def getSubInfo(info):
         subs = info["info"] # top-level array
     return subs
 
+DEP_BLACKLIST = set((
+    "mod_MinecraftForge",   # we always have Forge
+    "Forge", # typo for mod_MinecraftForge
+
+    "GUI_Api", # typo for GuiAPI and not needed on server
+    ))
+
 """Get all dependent mod IDs from readMcmodInfo() result.""" # TODO: OO
 def getDeps(info):
     deps = set()
@@ -121,6 +129,7 @@ def getDeps(info):
         deps.update(set(sub.get("dependencies", [])))
         deps.update(set(sub.get("dependancies", []))) # ohai iChun ;)
 
+    deps = deps - DEP_BLACKLIST
     if "mod_MinecraftForge" in deps:
         # we always have this..
         deps.remove("mod_MinecraftForge")
@@ -218,7 +227,6 @@ def main():
     analyzedMods = {None: vanilla}
 
     modsToAnalyze = getMods()
-    analyzedMods
     while len(modsToAnalyze) > 0:
         mod = modsToAnalyze.pop()
         if not forceRescan and os.path.exists(getInfoFilename(mod)):
@@ -233,9 +241,9 @@ def main():
             if not analyzedMods.has_key(dep):
                 # need to analyze a dependency, take care of it
                 analyzeMod(dep)
-                analyzedMods[mod] = saveModInfo(mod)
+                analyzedMods[mod] = saveModInfo(mod, [analyzedMods]) # TODO: deps
                 depsAnalyzed.append(analyzedMods[mod])
-                modsToAnalyze.remove(mod)
+                if mod in modsToAnalyze: modsToAnalyze.remove(mod)
             else:
                 # already analyzed this dependency, use it
                 depsAnalyzed.append(analyzedMods[dep])
