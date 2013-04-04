@@ -74,7 +74,7 @@ def analyzeMod(fn, others=[]):
 
 def getModName(fn):
     if fn is None:
-        return "vanilla"
+        return "Minecraft-%s" % (MC_VERSION,)
     else:
         return os.path.basename(fn)
 
@@ -134,6 +134,9 @@ def getModIDs(info):
             ids.add(sub["modid"])
     return ids
 
+def getInfoFilename(mod):
+    return os.path.join(DATA_DIR, "info-" + getModName(mod) + ".csv")
+
 def main():
 
     # gather dependencies
@@ -179,19 +182,51 @@ def main():
     analyzeMod(None)
     if not os.path.exists(DATA_DIR):
         os.mkdir(DATA_DIR)
-    vanilla = file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
+    vanilla = saveModInfo(None, [])
+    analyzedMods = {None: vanilla}
 
-    for mod in getMods():
+    modsToAnalyze = getMods()
+    analyzedMods
+    while len(modsToAnalyze) > 0:
+        mod = modsToAnalyze.pop()
         deps = fn2depsfn[mod]
+        depsAnalyzed = [analyzedMods[None]]  # everything depends on vanilla
+        for dep in deps:
+            if len(fn2depsfn.get(dep, [])) > 0:
+                print "Nested dependencies not yet supported, %s -> %s -> %s" % (mod, dep, fn2depsfn[dep]) # TODO: recurse
+                sys.exit(-1)
+            if not analyzedMods.has_key(dep):
+                # need to analyze a dependency, take care of it
+                analyzeMod(dep)
+                analyzedMods[mod] = saveModInfo(mod)
+                depsAnalyzed.append(analyzedMods[mod])
+                modsToAnalyze.remove(mod)
+            else:
+                # already analyzed this dependency, use it
+                depsAnalyzed.append(analyzedMods[dep])
+                
         analyzeMod(mod, deps)
-        with file(os.path.join(DATA_DIR, "info-" + getModName(mod) + ".csv"), "w") as f:
-            for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
-                if line in vanilla: 
-                    # skip unchanged vanilla content
-                    continue
-                    # TODO: also skip unchanged content added by dependencies! (e.g. IC2, for IC2 addons)
+        analyzedMods[mod] = saveModInfo(mod, depsAnalyzed)
 
-                f.write(line)
+
+def saveModInfo(mod, skip):
+    lines = []
+    with file(getInfoFilename(mod), "w") as f:
+        for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
+            notUs = False
+            for s in skip:
+                if line in s:
+                    notUs = True
+                    break
+
+            if notUs:
+                # skip content added by our dependencies
+                continue
+
+            f.write(line)
+            lines.append(line)
+    return lines
+
 
 if __name__ == "__main__":
     main()
