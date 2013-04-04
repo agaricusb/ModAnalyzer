@@ -130,11 +130,9 @@ def getDeps(info):
         deps.update(set(sub.get("dependancies", []))) # ohai iChun ;)
 
     deps = deps - DEP_BLACKLIST
-    if "mod_MinecraftForge" in deps:
-        # we always have this..
-        deps.remove("mod_MinecraftForge")
-    if "Forge" in deps:
-        deps.remove("Forge")
+    if "Industrialcraft" in deps: # GregTech
+        deps.remove("Industrialcraft")
+        deps.add("IC2")
 
     return deps
 
