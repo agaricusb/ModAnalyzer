@@ -252,6 +252,11 @@ def saveModInfo(mod, modLines, skip):
             f.write(line)
             lines.append(line)
 
+    if len(lines) == 0:
+        print "*" * 70
+        print "WARNING: No content found in mod",mod  # maybe a non-content mod.. or maybe improperly installed?
+        print "*" * 70
+
     return lines
 
 """Get analyzed mod content lines, possibly cached."""
