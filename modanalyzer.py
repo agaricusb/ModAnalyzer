@@ -50,7 +50,7 @@ def runServer():
     print "Server terminated"
 
 def analyzeMod(fn, others=[]):
-    print "Analyzing %s..." % (fn,)
+    print "Analyzing %s... (deps=%s)" % (getModName(fn), others)
     # clean
     modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
     if os.path.exists(modsFolder):
@@ -151,10 +151,15 @@ def getInfoFilename(mod):
 def getConfigsDir(mod):
     return os.path.join(CONFIGS_DIR, getModName(mod))
 
-def saveModInfo(mod, skip):
+"""Read the most recent analyzed mod unfiltered content lines."""
+def readModInfo():
+    return file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
+
+"""Write mod info to disk given unfiltered readModInfo() and list of other mod info lines (deps) to exclude."""
+def saveModInfo(mod, modLines, skip):
     lines = []
     with file(getInfoFilename(mod), "w") as f:
-        for line in file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines():
+        for line in modLines:
             notUs = False
             for s in skip:
                 if line in s:
@@ -168,15 +173,41 @@ def saveModInfo(mod, skip):
             f.write(line)
             lines.append(line)
 
+    return lines
+
+"""Get analyzed mod content lines, possibly cached."""
+def getModAnalysis(mod):
+    global fn2depsfn, forceRescan
+
+    infoFile = getInfoFilename(mod) 
+    if not forceRescan and os.path.exists(infoFile):
+        print "Reusing cached",getModName(mod)
+        return file(infoFile).readlines()
+
+    deps = fn2depsfn[mod]
+
+    analyzeMod(mod, deps)
+
     # save default config
     if os.path.exists(getConfigsDir(mod)): shutil.rmtree(getConfigsDir(mod))
     shutil.copytree(os.path.join(TEST_SERVER_ROOT, "config"), getConfigsDir(mod)) # save default config
 
+    # grab the content
+    unfilteredInfo = readModInfo()
 
-    return lines
+    # filter through dependencies, analyzing recursively if needed
+    depsAnalyzed = []
+    if mod is not None: depsAnalyzed.append(getModAnalysis(None)) # everything depends on vanilla, except vanilla
+    for dep in deps:
+        depsAnalyzed.append(getModAnalysis(dep))
+
+    info = saveModInfo(mod, unfilteredInfo, depsAnalyzed)
+
+    return info
 
 
 def main():
+    global fn2depsfn, forceRescan
 
     forceRescan = False
 
@@ -202,7 +233,7 @@ def main():
             print fn,deps
 
     # build mod filename -> dependency filenames
-    fn2depsfn = {}
+    fn2depsfn = {None: []}
     for fn, deps in fn2deps.iteritems():
         for dep in deps:
             if not modid2fn.has_key(dep):
@@ -228,38 +259,13 @@ def main():
     print "Using server at:",server
 
     # analyze vanilla for reference
-    analyzeMod(None)
     if not os.path.exists(DATA_DIR): os.mkdir(DATA_DIR)
     if not os.path.exists(CONFIGS_DIR): os.mkdir(CONFIGS_DIR)
-    vanilla = saveModInfo(None, [])
+    vanilla = getModAnalysis(None)
     analyzedMods = {None: vanilla}
 
-    modsToAnalyze = getMods()
-    while len(modsToAnalyze) > 0:
-        mod = modsToAnalyze.pop()
-        if not forceRescan and os.path.exists(getInfoFilename(mod)):
-            print "Skipping",mod
-            continue
-        deps = fn2depsfn[mod]
-        depsAnalyzed = [analyzedMods[None]]  # everything depends on vanilla
-        for dep in deps:
-            if len(fn2depsfn.get(dep, [])) > 0:
-                print "Nested dependencies not yet supported, %s -> %s -> %s" % (mod, dep, fn2depsfn[dep]) # TODO: recurse
-                sys.exit(-1)
-            if not analyzedMods.has_key(dep):
-                # need to analyze a dependency, take care of it
-                analyzeMod(dep)
-                analyzedMods[mod] = saveModInfo(mod, [analyzedMods]) # TODO: deps
-
-                depsAnalyzed.append(analyzedMods[mod])
-                if mod in modsToAnalyze: modsToAnalyze.remove(mod)
-            else:
-                # already analyzed this dependency, use it
-                depsAnalyzed.append(analyzedMods[dep])
-                
-        analyzeMod(mod, deps)
-        analyzedMods[mod] = saveModInfo(mod, depsAnalyzed)
-
+    for mod in getMods():
+        getModAnalysis(mod)
 
 if __name__ == "__main__":
     main()
