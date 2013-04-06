@@ -40,6 +40,10 @@ FILENAME_HAS_NO_VERSION = [
     "gregtechmod.zip", # "If you are unsure about your Version, look at the "mcmod.info" inside the zip, just open it with Notepad."
     ]
 
+REQUIRES_EXTRACTION = {
+    "Millenaire": "Put in mods folder", # extracted from this folder
+    }
+
 def getExtraDeps(mod):
     for k, v in DEP_ADDITIONS.iteritems():
         if mod.startswith(k):
@@ -72,3 +76,12 @@ def modNeedsRename(fn):
         if fn.startswith(k):
             return True
     return False
+
+"""Get the folder name in a mod zip which tells you to install it into the mod folders."""
+def getInstructionFolder(fn):
+    for k, v in REQUIRES_EXTRACTION.iteritems():
+        if fn.startswith(k):
+            return v
+    return None
+
+    

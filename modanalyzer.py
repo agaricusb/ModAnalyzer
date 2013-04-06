@@ -89,9 +89,57 @@ def installMod(fn, modsFolder, coremodsFolder):
         dest = coremodsFolder
     else:
         dest = modsFolder
-   
-    shutil.copyfile(fn, os.path.join(dest, getModName(fn)))
 
+    instructionFolder = mcmodfixes.getInstructionFolder(os.path.basename(fn))
+    if instructionFolder is not None:
+        # we're not done yet..
+        hoopJumper(fn, instructionFolder, dest)
+    else:
+        # simple and easy file copy
+        shutil.copyfile(fn, os.path.join(dest, getModName(fn)))
+
+"""Jump through extra hoops required to install a mod, such as extracting a specific folder in a specific location."""
+def hoopJumper(fn, instructionFolder, dest):
+    print "Extracting double-zipped mod",fn
+    with zipfile.ZipFile(fn) as containerZip:
+        for name in containerZip.namelist():
+            parts = name.split(os.path.sep)
+            if instructionFolder not in parts:
+                # other documentation, etc.
+                continue
+
+            # cut path at the "Put in mods folder" folder
+            n = parts.index(instructionFolder)
+            path = os.path.sep.join(parts[n + 1:])
+            if path.endswith("/") or len(path) == 0:
+                print "Creating",path
+                _mkdir(os.path.join(dest, path))
+                continue
+
+            print "Extracting",path
+            data = containerZip.read(name)
+            file(os.path.join(dest, path), "w").write(data)
+
+# Borrowed from FML
+#Taken from: http://stackoverflow.com/questions/7545299/distutil-shutil-copytree
+def _mkdir(newdir):
+    """works the way a good mkdir should :)
+        - already exists, silently complete
+        - regular file in the way, raise an exception
+        - parent directory(ies) does not exist, make them as well
+    """
+    if os.path.isdir(newdir):
+        pass
+    elif os.path.isfile(newdir):
+        raise OSError("a file with the same name as the desired " \
+                      "dir, '%s', already exists." % newdir)
+    else:
+        head, tail = os.path.split(newdir)
+        if head and not os.path.isdir(head):
+            _mkdir(head)
+        #print "_mkdir %s" % repr(newdir)
+        if tail:
+            os.mkdir(newdir)
 
 def getModName(fn):
     if fn is None:
