@@ -5,6 +5,7 @@
 DEP_BLACKLIST = set((
     "mod_MinecraftForge",   # we always have Forge
     "Forge", # typo for mod_MinecraftForge
+    "MinecraftForge, CodeChickenCore", # typo for CodeChickenCore, broken string instead of a real list
     "Industrialcraft", # typo for IC2
 
     "GUI_Api", # typo for GuiAPI and not needed on server
@@ -20,6 +21,8 @@ DEP_ADDITIONS = {
     "FlatBedrock": ["PowerCrystalsCore"],
     "immibis-microblocks": ["ImmibisCore"],
     "SlopesAndCorners": ["SlimevoidLib"],
+    "ChickenChunks": ["CodeChickenCore"],
+    "EnderStorage": ["CodeChickenCore"],
     }
 
 def getExtraDeps(mod):
@@ -47,7 +50,11 @@ def fixModIDs(mod, ids):
     return ids
 
 
-COREMODS = ["PowerCrystalsCore", "immibis-microblocks"]
+COREMODS = [
+    "PowerCrystalsCore", 
+    "immibis-microblocks",
+    "CodeChickenCore",
+    ]
 
 def isCoremod(fn):
     for k in COREMODS:
