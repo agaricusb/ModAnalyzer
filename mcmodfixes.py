@@ -43,7 +43,13 @@ FILENAME_HAS_NO_VERSION = [
     ]
 
 REQUIRES_EXTRACTION = {
-    "Millenaire": "Put in mods folder", # extracted from this folder
+    # mod name : extracted from this folder
+    "Millenaire": "Put in mods folder", 
+    "BattleTowers": "mods",
+    "KenshiroMod": "mods",
+    "MagicYarn": "mods",
+    "Ruins": "mods",
+    #"RopePlus": "mods", # not
     }
 
 def getExtraDeps(mod):
