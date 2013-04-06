@@ -105,10 +105,32 @@ def getMods():
     mods = []
     for m in sorted(os.listdir(ALL_MODS_DIR)):
         if m.startswith("."): continue
+
+        if mcmodfixes.modNeedsRename(m):
+            newName = uniquelyRenameMod(m)
+            print "Renaming non-unique mod filename %s -> %s" % (m, newName)
+            os.rename(os.path.join(ALL_MODS_DIR, m), os.path.join(ALL_MODS_DIR, newName))
+            m = newName
+
         mods.append(os.path.join(ALL_MODS_DIR, m))
     return mods
 
+"""Get a new hopefully more unique filename for mods named without their versions."""
+def uniquelyRenameMod(fn):
+    print "Getting unique filename for",fn
+    info = readMcmodInfo(os.path.join(ALL_MODS_DIR, fn))
+    assert info.has_key("info"), "Unable to read mcmod.info for: %s" % (fn,)
+    assert type(info["info"]) == types.ListType, "No mcmod.info entries for: %s" % (fn,)
+    assert len(info["info"]) == 1, "Not exactly one mcmod.info entry in: %s" % (fn,)
+    assert info["info"][0].has_key("version"), "No version property in mcmod.info for" % (fn,)
+    version = info["info"][0]["version"]
+
+    original, ext = os.path.splitext(fn)
+
+    return "%s-%s%s" % (original, version, ext)
+
 def readMcmodInfo(fn):
+    if not fn.endswith(".jar") and not fn.endswith(".zip"): print "WARNING: non-zip/jar mod in",fn
     with zipfile.ZipFile(fn) as modZip:
         if "mcmod.info" in modZip.namelist():
             raw_json = modZip.read("mcmod.info")
