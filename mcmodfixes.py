@@ -10,6 +10,7 @@ DEP_BLACKLIST = set((
 
     "GUI_Api", # typo for GuiAPI and not needed on server
     "EurysCore", # replaced by SlimevoidLib?
+    "Modular Powersuits", # mmmPowersuits
     ))
 
 
@@ -24,6 +25,7 @@ DEP_ADDITIONS = {
     "ChickenChunks": ["CodeChickenCore"],
     "EnderStorage": ["CodeChickenCore"],
     "TrailMix": ["iChunUtil"],
+    "MPSA": ["mmmPowersuits"],
     }
 
 MOD_IDS = {
