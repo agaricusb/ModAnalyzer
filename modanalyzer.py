@@ -14,6 +14,8 @@ CONFIGS_DIR = "configs"
 
 import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types, pprint, sys
 
+import mcmodfixes
+
 def setupServer(serverFilename):
     mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
     forgeZip = getURLZip("http://files.minecraftforge.net/minecraftforge/minecraftforge-universal-%s-%s.zip" % (MC_VERSION, FORGE_VERSION))
@@ -115,35 +117,25 @@ def getSubInfo(info):
         subs = info["info"] # top-level array
     return subs
 
-DEP_BLACKLIST = set((
-    "mod_MinecraftForge",   # we always have Forge
-    "Forge", # typo for mod_MinecraftForge
-
-    "GUI_Api", # typo for GuiAPI and not needed on server
-    ))
-
 """Get all dependent mod IDs from readMcmodInfo() result.""" # TODO: OO
-def getDeps(info):
+def getDeps(fn, info):
     deps = set()
 
     for sub in getSubInfo(info):
         deps.update(set(sub.get("dependencies", [])))
         deps.update(set(sub.get("dependancies", []))) # ohai iChun ;)
 
-    deps = deps - DEP_BLACKLIST
-    if "Industrialcraft" in deps: # GregTech
-        deps.remove("Industrialcraft")
-        deps.add("IC2")
+    deps = mcmodfixes.fixDeps(getModName(fn), deps)
 
     return deps
 
 """Get all mod IDs in an mcmod readMcmodInfo()."""
-def getModIDs(info):
+def getModIDs(fn, info):
     ids = set()
     for sub in getSubInfo(info):
         if sub.has_key("modid"):
             ids.add(sub["modid"])
-    return ids
+    return mcmodfixes.fixModIDs(getModName(fn), ids)
 
 def getInfoFilename(mod):
     return os.path.join(DATA_DIR, getModName(mod) + ".csv")
@@ -223,12 +215,12 @@ def main():
     fn2deps = {}
     for fn in getMods():
         info = readMcmodInfo(fn)
-        deps = getDeps(info)
+        deps = getDeps(fn, info)
 
-        for modid in getModIDs(info):
+        for modid in getModIDs(fn, info):
             modid2fn[modid] = fn
 
-        fn2deps[fn] = deps
+        fn2deps[fn] = mcmodfixes.fixDeps(fn, deps)
         if len(deps) != 0:
             print fn,deps
 
