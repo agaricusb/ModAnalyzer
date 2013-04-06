@@ -10,6 +10,7 @@ ANALYZER_FILENAME = "ModAnalyzer-1.0-SNAPSHOT.jar"
 
 ALL_MODS_DIR = "allmods"
 DATA_DIR = "data"
+CONFIGS_DIR = "configs"
 
 import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types, pprint, sys
 
@@ -147,6 +148,9 @@ def getModIDs(info):
 def getInfoFilename(mod):
     return os.path.join(DATA_DIR, getModName(mod) + ".csv")
 
+def getConfigsDir(mod):
+    return os.path.join(CONFIGS_DIR, getModName(mod))
+
 def saveModInfo(mod, skip):
     lines = []
     with file(getInfoFilename(mod), "w") as f:
@@ -163,6 +167,12 @@ def saveModInfo(mod, skip):
 
             f.write(line)
             lines.append(line)
+
+    # save default config
+    if os.path.exists(getConfigsDir(mod)): shutil.rmtree(getConfigsDir(mod))
+    shutil.copytree(os.path.join(TEST_SERVER_ROOT, "config"), getConfigsDir(mod)) # save default config
+
+
     return lines
 
 
@@ -219,8 +229,8 @@ def main():
 
     # analyze vanilla for reference
     analyzeMod(None)
-    if not os.path.exists(DATA_DIR):
-        os.mkdir(DATA_DIR)
+    if not os.path.exists(DATA_DIR): os.mkdir(DATA_DIR)
+    if not os.path.exists(CONFIGS_DIR): os.mkdir(CONFIGS_DIR)
     vanilla = saveModInfo(None, [])
     analyzedMods = {None: vanilla}
 
@@ -240,6 +250,7 @@ def main():
                 # need to analyze a dependency, take care of it
                 analyzeMod(dep)
                 analyzedMods[mod] = saveModInfo(mod, [analyzedMods]) # TODO: deps
+
                 depsAnalyzed.append(analyzedMods[mod])
                 if mod in modsToAnalyze: modsToAnalyze.remove(mod)
             else:
