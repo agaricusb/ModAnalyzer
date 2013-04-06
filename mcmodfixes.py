@@ -30,8 +30,6 @@ def fixDeps(mod, deps):
     deps -= DEP_BLACKLIST
     deps |= getExtraDeps(mod)
 
-    print "FIXDEPS:",mod,deps
-
     return deps
 
 MOD_IDS = {

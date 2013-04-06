@@ -55,9 +55,15 @@ def analyzeMod(fn, others=[]):
     print "Analyzing %s... (deps=%s)" % (getModName(fn), others)
     # clean
     modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
-    if os.path.exists(modsFolder):
+    if os.path.exists(modsFolder): 
         shutil.rmtree(modsFolder)
+
+    coremodsFolder = os.path.join(TEST_SERVER_ROOT, "coremods")
+    if os.path.exists(coremodsFolder):
+        shutil.rmtree(coremodsFolder)
+
     os.mkdir(modsFolder)
+    os.mkdir(coremodsFolder)
     configFolder = os.path.join(TEST_SERVER_ROOT, "config")
     if os.path.exists(configFolder):
         shutil.rmtree(configFolder)
@@ -66,15 +72,24 @@ def analyzeMod(fn, others=[]):
     shutil.copyfile(os.path.join("target", ANALYZER_FILENAME), os.path.join(modsFolder, ANALYZER_FILENAME))
 
     # install mod
-    if fn is not None:
-        shutil.copyfile(fn, os.path.join(modsFolder, getModName(fn)))
+    installMod(fn, modsFolder, coremodsFolder)
 
     # install deps
     for other in others:
-        shutil.copyfile(other, os.path.join(modsFolder, getModName(other)))
+        installMod(other, modsFolder, coremodsFolder)
 
     # running the server will load the analyzer, then quit
     runServer()
+
+def installMod(fn, modsFolder, coremodsFolder):
+    if fn is None: 
+        return
+
+    dest = modsFolder
+    # TODO: support coremods
+   
+    shutil.copyfile(fn, os.path.join(dest, getModName(fn)))
+
 
 def getModName(fn):
     if fn is None:
