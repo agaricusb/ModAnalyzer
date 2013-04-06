@@ -23,6 +23,7 @@ DEP_ADDITIONS = {
     "SlopesAndCorners": ["SlimevoidLib"],
     "ChickenChunks": ["CodeChickenCore"],
     "EnderStorage": ["CodeChickenCore"],
+    "TrailMix": ["iChunUtil"],
     }
 
 def getExtraDeps(mod):
