@@ -9,4 +9,6 @@ target
 .idea
 temp-server
 data
+configs
 allmods
+*.pyc
