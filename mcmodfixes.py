@@ -8,6 +8,7 @@ DEP_BLACKLIST = set((
     "Industrialcraft", # typo for IC2
 
     "GUI_Api", # typo for GuiAPI and not needed on server
+    "EurysCore", # replaced by SlimevoidLib?
     ))
 
 
@@ -18,6 +19,7 @@ DEP_ADDITIONS = {
     "PowerConverters": ["PowerCrystalsCore"],
     "FlatBedrock": ["PowerCrystalsCore"],
     "immibis-microblocks": ["ImmibisCore"],
+    "SlopesAndCorners": ["SlimevoidLib"],
     }
 
 def getExtraDeps(mod):
