@@ -85,8 +85,10 @@ def installMod(fn, modsFolder, coremodsFolder):
     if fn is None: 
         return
 
-    dest = modsFolder
-    # TODO: support coremods
+    if mcmodfixes.isCoremod(getModName(fn)):
+        dest = coremodsFolder
+    else:
+        dest = modsFolder
    
     shutil.copyfile(fn, os.path.join(dest, getModName(fn)))
 

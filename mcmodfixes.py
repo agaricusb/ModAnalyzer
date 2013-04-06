@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Fixes for various mods' mcmod.info files
+# Fixes and mod-specific data for various mods' mcmod.info files
 
 DEP_BLACKLIST = set((
     "mod_MinecraftForge",   # we always have Forge
@@ -17,6 +17,7 @@ DEP_ADDITIONS = {
     "NetherOres": ["PowerCrystalsCore"],
     "PowerConverters": ["PowerCrystalsCore"],
     "FlatBedrock": ["PowerCrystalsCore"],
+    "immibis-microblocks": ["ImmibisCore"],
     }
 
 def getExtraDeps(mod):
@@ -42,3 +43,12 @@ def fixModIDs(mod, ids):
             return v 
 
     return ids
+
+
+COREMODS = ["PowerCrystalsCore", "immibis-microblocks"]
+
+def isCoremod(fn):
+    for k in COREMODS:
+        if fn.startswith(k):
+            return True
+    return False 
