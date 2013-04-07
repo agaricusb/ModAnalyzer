@@ -209,8 +209,15 @@ def getDeps(fn, info):
     deps = set()
 
     for sub in getSubInfo(info):
-        deps.update(set(sub.get("dependencies", [])))
-        deps.update(set(sub.get("dependancies", []))) # ohai iChun ;)
+        # https://github.com/MinecraftForge/FML/wiki/FML-mod-information-file
+
+        # soft deps - lets require them anyways
+        deps.update(set(sub.get("dependencies", []))) # before
+        deps.update(set(sub.get("dependancies", []))) # typo
+        deps.update(set(sub.get("dependants", []))) # after
+
+        # hard deps
+        deps.update(set(sub.get("requiredMods", [])))
 
     deps = mcmodfixes.fixDeps(getModName(fn), deps)
 

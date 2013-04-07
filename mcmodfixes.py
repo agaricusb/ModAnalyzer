@@ -4,7 +4,8 @@
 
 DEP_BLACKLIST = set((
     "mod_MinecraftForge",   # we always have Forge
-    "Forge", # typo for mod_MinecraftForge
+    "Forge", # typo(?) for mod_MinecraftForge
+    "FML", # we always have FML
     "MinecraftForge", # another typo for mod_MinecraftForge
     "MinecraftForge, CodeChickenCore", # typo for CodeChickenCore, broken string instead of a real list
     "Industrialcraft", # typo for IC2
