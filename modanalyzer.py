@@ -289,7 +289,7 @@ def saveModInfo(mod, modLines, skip, allDeps):
         print mod,dep,"DEPCONFIG",depConfigs
         ignoreConfigs += depConfigs
 
-    for name in os.listdir(os.path.join(TEST_SERVER_ROOT, "config")):
+    for name in recursiveListdir(os.path.join(TEST_SERVER_ROOT, "config")):
         sourcePath = os.path.join(TEST_SERVER_ROOT, "config", name)
         targetPath = os.path.join(getConfigsDir(mod), name)
 
@@ -308,6 +308,19 @@ def saveModInfo(mod, modLines, skip, allDeps):
     #shutil.copytree(os.path.join(TEST_SERVER_ROOT, "config"), getConfigsDir(mod))
 
     return lines
+
+"""Get all files in a directory, including subdirectories."""
+def recursiveListdir(d):
+    output = []
+    for path, dirs, files in os.walk(d):
+        # get relative path
+        prefix = os.path.commonprefix((path, d))
+        lastPath = path.replace(prefix, "")
+        if lastPath.startswith(os.path.sep): lastPath = lastPath[1:]
+
+        for f in files:
+            output.append(os.path.join(lastPath, f))
+    return output
 
 """Get analyzed mod content lines, possibly cached."""
 def getModAnalysis(mod):
