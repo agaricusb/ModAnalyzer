@@ -51,22 +51,27 @@ def runServer():
     os.chdir(d)
     print "Server terminated"
 
-def analyzeMod(fn, others=[]):
-    print "Analyzing %s... (deps=%s)" % (getModName(fn), others)
-    # clean
-    modsFolder = os.path.join(TEST_SERVER_ROOT, "mods")
+def prepareCleanServerFolders(serverRoot):
+    modsFolder = os.path.join(serverRoot, "mods")
     if os.path.exists(modsFolder): 
         shutil.rmtree(modsFolder)
 
-    coremodsFolder = os.path.join(TEST_SERVER_ROOT, "coremods")
+    coremodsFolder = os.path.join(serverRoot, "coremods")
     if os.path.exists(coremodsFolder):
         shutil.rmtree(coremodsFolder)
 
     os.mkdir(modsFolder)
     os.mkdir(coremodsFolder)
-    configFolder = os.path.join(TEST_SERVER_ROOT, "config")
+    configFolder = os.path.join(serverRoot, "config")
     if os.path.exists(configFolder):
         shutil.rmtree(configFolder)
+
+    return modsFolder, coremodsFolder, configFolder
+
+def analyzeMod(fn, others=[]):
+    print "Analyzing %s... (deps=%s)" % (getModName(fn), others)
+    # clean
+    modsFolder, coremodsFolder, configFolder = prepareCleanServerFolders(TEST_SERVER_ROOT)
 
     # install analyzer
     shutil.copyfile(os.path.join("target", ANALYZER_FILENAME), os.path.join(modsFolder, ANALYZER_FILENAME))
@@ -321,8 +326,6 @@ def load():
         contents[filename] = content
 
     return contents
-
-
 
 def main():
     global fn2depsfn, forceRescan
