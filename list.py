@@ -4,34 +4,7 @@ import os
 import json
 import pprint
 
-DATA_DIR = "data"
-
-"""Load content into dict keyed mod name -> kind -> id -> key/value."""
-def load():
-    contents = {}
-    for filename in os.listdir(DATA_DIR):
-        if filename.startswith("."): continue
-
-        path = os.path.join(DATA_DIR, filename)
-
-        content = {}
-        for line in file(path).readlines():
-            tokens = line.replace("\n", "").split("\t")
-            kind, id, key, value = tokens
-
-            # how I miss autovivification..
-            if not content.has_key(kind):
-                content[kind] = {}
-
-            if not content[kind].has_key(id):
-                content[kind][id] = {}
-
-            content[kind][id][key] = value
-
-        contents[filename] = content
-
-    return contents
-
+import modanalyzer
 
 """Given a kind, get id -> mod -> key/value. Used for showing conflicts."""
 def sliceAcross(contents, kind):
@@ -66,7 +39,7 @@ def showSlice(sliced):
         print id, "\t", "\t".join(mods)
 
 def main():
-    content = load()
+    content = modanalyzer.load()
 
     for kind in getKinds(content):
         print
