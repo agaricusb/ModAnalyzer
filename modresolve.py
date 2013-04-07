@@ -7,11 +7,14 @@ import pprint
 import modanalyzer
 import modlist
 
+START_BLOCK_ID = 500      # >256 for future vanilla block expansion, >408 for future itemblocks?
+END_BLOCK_ID = 4095       # maximum, 12-bit
+
 """Get an available block ID."""
 def findAvailable(used):
     # first available (one-fit)
     # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
-    for i in range(1, 4096):
+    for i in range(START_BLOCK_ID, END_BLOCK_ID + 1):
         if i not in used:
             return i
     print used
