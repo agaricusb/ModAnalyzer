@@ -17,6 +17,7 @@ DEP_BLACKLIST = set((
 
 DEP_ADDITIONS = {
     "gregtech": ["IC2"],
+    "dimensional-anchor": ["IC2"],
     "MineFactoryReloaded": ["PowerCrystalsCore"],
     "NetherOres": ["PowerCrystalsCore"],
     "PowerConverters": ["PowerCrystalsCore"],
