@@ -81,46 +81,48 @@ def getConfigFiles(mod):
 
     return configs
 
-"""Install mod configuration. Returns True if requires additional manual configuration by the user."""
+"""Install mod configuration. Returns any needed manual edits."""
 def installModConfigs(mod, modMappings):
+    pendingEdits = []
 
-    requiresManual = False
+    # read default configs
+    editingConfigs = {}
     for sourcePath, targetPath in getConfigFiles(mod):
         data = file(sourcePath).read()
+        editingConfigs[targetPath] = data
 
-        data, thisRequiresManual = applyConfigEdits(data, modMappings)
-        if thisRequiresManual: 
-            requiresManual = True
+    # apply edits
+    for mod, kind, oldId, newId in modMappings:
+        success = False
+        for targetPath, data in editingConfigs.iteritems():
+            data, thisFailed = applyConfigEdit(data, kind, oldId, newId)
+            if not thisFailed: 
+                success = True
+                break
 
-        print "Installing %s -> %s [%s]" % (sourcePath, targetPath, len(modMappings))
-        if requiresManual:
-            print "NOTICE: manual edits required to %s" % (targetPath,)
+        if not success:
+            pendingEdits.append((mod, kind, oldId, newId))
+
+
+    # write files
+    needsMerge = False
+    for targetPath, data in editingConfigs.iteritems():
+        print "Installing %s [%s]" % (targetPath, len(modMappings))
         modanalyzer.mkdirContaining(targetPath)
 
         if os.path.exists(targetPath):
             print "NOTICE: Mod reuses config: installing configs for %s from %s but %s already exists - needs merge" % (mod, sourcePath, targetPath)
             readme = "\n" + ("#" * 70) + "\n# TODO: Merge from " + modanalyzer.getModName(mod) + "\n" + ("#" * 70) + "\n"
             data = readme + data
-            requiresManual = True
-            # TODO: try to merge automatically?
 
+            needsMerge = True
+            pendingEdits += modMappings # probably everything, to be safe
+            # TODO: try to merge automatically?
 
         file(targetPath, "a").write(data)
 
-    return requiresManual
-
+    return pendingEdits
    
-"""Apply the required configuration edits to change the given IDs, as possible."""
-def applyConfigEdits(data, modMappings):
-    requiresManual = False
-    for mod, kind, oldId, newId in modMappings:
-        data, thisRequiresManual = applyConfigEdit(data, kind, oldId, newId)
-
-        if thisRequiresManual: 
-            requiresManual = True
-
-    return data, requiresManual
-
 """Change given ID in read config file data, or add comments for the user to do it if it cannot be automated."""
 def applyConfigEdit(data, kind, oldId, newId):
     section = None
@@ -164,7 +166,7 @@ def main():
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
 
-    requiresManual = []
+    requiresManual = {}
     for mod in wantedMods:
         if not contents.has_key(os.path.basename(mod)+".csv"):
             print "No mod analysis found for %s, please analyze" % (mod,)
@@ -175,13 +177,14 @@ def main():
 
         modMappings = filter(lambda m: m[0] == os.path.basename(mod), mappings)
 
-        if installModConfigs(mod, modMappings):
-            requiresManual.append(mod)
+        pendingEdits = installModConfigs(mod, modMappings)
+        if len(pendingEdits) > 0:
+            requiresManual[mod] = pendingEdits
 
     if len(requiresManual) > 0:
         print "=" * 70
-        for m in requiresManual:
-            print m, "\t", " ".join([x[1] for x in getConfigFiles(m)])
+        for m, edits in requiresManual.iteritems():
+            print m, "\t", " ".join([x[1] for x in getConfigFiles(m)]), "\t", edits
         print "=" * 70
         print "The above mods require manual configuration file editing to continue."
         print "Edit their configs appropriately (search for 'TODO'), then start the server."
