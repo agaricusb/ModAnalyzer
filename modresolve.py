@@ -176,6 +176,8 @@ def getModGirth(contents, mod):
 
     return girth
 
+PRIORITY_FILE = "priority.txt"
+
 """Sort all mods by priority."""
 def sortAllMods(contents):
     mods = os.listdir(modanalyzer.ALL_MODS_DIR) 
@@ -183,7 +185,20 @@ def sortAllMods(contents):
     # default priority
     mods.sort(cmp=lambda a, b: cmp(getModGirth(contents, b), getModGirth(contents, a)))
 
-    file("priority.txt", "w").write("\n".join(mods))   # TODO: configurable; re-read
+    if os.path.exists(PRIORITY_FILE):
+        existingPriority = [x.strip() for x in file(PRIORITY_FILE).readlines()]
+        missing = set(mods) - set(existingPriority) 
+        if len(missing) != 0:
+            # just add to the end
+            mods = existingPriority + list(missing)
+            print "NOTICE: Adding %s mods to end of priority list %s" % (missing, PRIORITY_FILE)
+            file(PRIORITY_FILE, "w").write("\n".join(mods))
+        else:
+            print "Reusing priority file %s" % (PRIORITY_FILE,)
+            mods = existingPriority
+    else:
+        file(PRIORITY_FILE, "w").write("\n".join(mods))
+        print "Wrote new priority file at %s, edit as you wish" % (PRIORITY_FILE,)
 
     return mods
 
