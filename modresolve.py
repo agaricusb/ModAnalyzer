@@ -88,7 +88,7 @@ def installModConfigs(mod, modMappings):
     for sourcePath, targetPath in getConfigFiles(mod):
         if os.path.exists(targetPath):
             print "FATAL ERROR: installing configs for %s from %s but %s already exists, not overwriting" % (mod, sourcePath, targetPath)
-            #sys.exit(-1)
+            sys.exit(-1)
             # TODO: dep exclusion again
 
         data = file(sourcePath).read()
@@ -100,18 +100,11 @@ def installModConfigs(mod, modMappings):
         print "Installing %s -> %s [%s]" % (sourcePath, targetPath, len(modMappings))
         if requiresManual:
             print "NOTICE: manual edits required to %s" % (targetPath,)
-        mkdirContaining(targetPath)
+        modanalyzer.mkdirContaining(targetPath)
         file(targetPath, "w").write(data)
 
     return requiresManual
 
-"""Make the directory containing the given filename, if needed."""
-def mkdirContaining(filename):
-    parts = filename.split(os.path.sep)
-    tail = parts[:-1]
-    targetDir = os.path.sep.join(tail)
-
-    modanalyzer._mkdir(targetDir)
    
 """Apply the required configuration edits to change the given IDs, as possible."""
 def applyConfigEdits(data, modMappings):

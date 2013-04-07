@@ -125,6 +125,14 @@ def hoopJumper(fn, instructionFolder, dest):
             data = containerZip.read(name)
             file(os.path.join(dest, path), "w").write(data)
 
+"""Make the directory containing the given filename, if needed."""
+def mkdirContaining(filename):
+    parts = filename.split(os.path.sep)
+    tail = parts[:-1]
+    targetDir = os.path.sep.join(tail)
+
+    _mkdir(targetDir)
+
 # Borrowed from FML
 #Taken from: http://stackoverflow.com/questions/7545299/distutil-shutil-copytree
 def _mkdir(newdir):
@@ -247,7 +255,7 @@ def readModInfo():
     return file(os.path.join(TEST_SERVER_ROOT, "mod-analysis.csv")).readlines()
 
 """Write mod info to disk given unfiltered readModInfo() and list of other mod info lines (deps) to exclude."""
-def saveModInfo(mod, modLines, skip):
+def saveModInfo(mod, modLines, skip, allDeps):
     lines = []
     with file(getInfoFilename(mod), "w") as f:
         for line in modLines:
@@ -269,6 +277,36 @@ def saveModInfo(mod, modLines, skip):
         print "WARNING: No content found in mod",mod  # maybe a non-content mod.. or maybe improperly installed?
         print "*" * 70
 
+    # save default config
+    if os.path.exists(getConfigsDir(mod)): 
+        shutil.rmtree(getConfigsDir(mod))
+    os.mkdir(getConfigsDir(mod))
+
+    # filter deps configs
+    ignoreConfigs = []
+    for dep in allDeps:
+        depConfigs = os.listdir(getConfigsDir(dep))
+        print mod,dep,"DEPCONFIG",depConfigs
+        ignoreConfigs += depConfigs
+
+    for name in os.listdir(os.path.join(TEST_SERVER_ROOT, "config")):
+        sourcePath = os.path.join(TEST_SERVER_ROOT, "config", name)
+        targetPath = os.path.join(getConfigsDir(mod), name)
+
+        if os.path.isdir(sourcePath):
+            continue
+
+        if name in ignoreConfigs:
+            print "@ Ignoring dependency config",name
+            continue
+        else:
+            print "@ Copying config",name
+
+        mkdirContaining(targetPath)
+        shutil.copyfile(sourcePath, targetPath)
+
+    #shutil.copytree(os.path.join(TEST_SERVER_ROOT, "config"), getConfigsDir(mod))
+
     return lines
 
 """Get analyzed mod content lines, possibly cached."""
@@ -284,20 +322,23 @@ def getModAnalysis(mod):
 
     analyzeMod(mod, deps)
 
-    # save default config
-    if os.path.exists(getConfigsDir(mod)): shutil.rmtree(getConfigsDir(mod))
-    shutil.copytree(os.path.join(TEST_SERVER_ROOT, "config"), getConfigsDir(mod)) # save default config
-
     # grab the content
     unfilteredInfo = readModInfo()
 
     # filter through dependencies, analyzing recursively if needed
     depsAnalyzed = []
-    if mod is not None: depsAnalyzed.append(getModAnalysis(None)) # everything depends on vanilla, except vanilla
-    for dep in deps:
+
+    # everything depends on vanilla ("None"), except vanilla
+    if mod is not None:
+        allDeps = [None] + deps
+    else:
+        allDeps = deps
+
+    for dep in allDeps:
         depsAnalyzed.append(getModAnalysis(dep))
 
-    info = saveModInfo(mod, unfilteredInfo, depsAnalyzed)
+    info = saveModInfo(mod, unfilteredInfo, depsAnalyzed, allDeps)
+
 
     return info
 
