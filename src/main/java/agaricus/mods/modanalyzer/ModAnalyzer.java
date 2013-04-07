@@ -13,6 +13,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
 import net.minecraft.entity.EntityList;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.FurnaceRecipes;
 import net.minecraft.world.biome.BiomeGenBase;
@@ -148,6 +149,7 @@ public class ModAnalyzer {
                 put("isItemTool", item.isItemTool(itemStack));
                 put("enchantability", item.getItemEnchantability());
                 put("isRepairable", item.isRepairable());
+                put("isItemBlock", item instanceof ItemBlock);
             }
         }
     }
