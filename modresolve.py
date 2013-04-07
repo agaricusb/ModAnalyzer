@@ -3,6 +3,7 @@
 import os
 import sys
 import pprint
+import re
 
 import modanalyzer
 import modlist
@@ -22,7 +23,8 @@ def findAvailable(used):
 
 """Get two mod names sorted by their ID resolution priority."""
 def sortModByPriority(a, b):
-    return cmp(a.lower(), b.lower())
+    #return cmp(a.lower(), b.lower())
+    return cmp(b.lower(), a.lower())
 
 """Get whether this mod list contains a vanilla override, which should not be resolved."""
 def vanillaOverride(sortedMods):
@@ -54,10 +56,90 @@ def getConflictMappings(contents, kind):
             for conflictingMod in usingMods.keys():
                 newId = findAvailable(used)
                 used.add(newId)
-                mappings.append((conflictingMod, kind, id, newId))
+                mappings.append((conflictingMod.replace(".csv", ""), kind, id, newId))
                 print "\tmoving %s %s -> %s" % (conflictingMod, id, newId)
 
     return mappings
+
+CONFIG_IGNORE = ["forge.cfg", "forgeChunkLoading.cfg"]  # TODO: exclude from deps in mod analysis
+
+def installModConfigs(mod, modMappings):
+    configDir = modanalyzer.getConfigsDir(mod)
+
+    for name in os.listdir(configDir):
+        if name in CONFIG_IGNORE: 
+            continue
+        sourcePath = os.path.join(configDir, name)
+        targetPath = os.path.join(modanalyzer.TEST_SERVER_ROOT, "config", name)
+
+        if os.path.exists(targetPath):
+            print "FATAL ERROR: installing configs for %s from %s but %s already exists, not overwriting" % (mod, sourcePath, targetPath)
+            sys.exit(-1)
+            # TODO: dep exclusion again
+
+        data = file(sourcePath).read()
+
+        data, requiresManual = applyConfigEdits(data, modMappings)
+
+        print "Installing %s -> %s [%s]" % (sourcePath, targetPath, len(modMappings))
+        if requiresManual:
+            print "NOTICE: manual edits required to %s" % (targetPath,)
+        mkdirContaining(targetPath)
+        file(targetPath, "w").write(data)
+
+    raise SystemExit
+
+"""Make the directory containing the given filename, if needed."""
+def mkdirContaining(filename):
+    parts = filename.split(os.path.sep)
+    tail = parts[:-1]
+    targetDir = os.path.sep.join(tail)
+
+    modanalyzer._mkdir(targetDir)
+   
+"""Apply the required configuration edits to change the given IDs, as possible."""
+def applyConfigEdits(data, modMappings):
+    requiresManual = False
+    for mod, kind, oldId, newId in modMappings:
+        data, thisRequiresManual = applyConfigEdit(data, kind, oldId, newId)
+
+        if thisRequiresManual: 
+            requiresManual = True
+
+    return data, requiresManual
+
+"""Change given ID in read config file data, or add comments for the user to do it if it cannot be automated."""
+def applyConfigEdit(data, kind, oldId, newId):
+    section = None
+    requiresManual = False
+
+    # Find possibly matching lines
+    hits = {}
+    lines = data.split("\n")
+    for i, line in enumerate(lines):
+        line = line.replace("\n", "")
+        if line.startswith("%s {" % (kind,)):
+            section = kind
+
+        if line.endswith("=%s" % (oldId)):
+            hits[i] = {"old": line, "new": re.sub(r"\d+$", str(newId), line), "section": section, "matchingSection": section == kind}
+
+    if len(hits) == 0:
+        lines.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
+        requiresManual = True
+    elif len(hits) == 1:
+        # just one hit, we know what to do
+        n = hits.keys()[0]
+        lines[n] = hits[n]["new"] + "   # was: " + hits[n]["old"].strip()
+    else:
+        # ambiguous..
+        # TODO: if there is only one matching section, use it! it is not ambiguous
+        for n in hits.keys():
+            lines[n] += " # %s # TODO: change one of %s ID %s -> %s" % (hits[n]["new"], kind, oldId, newId)
+        requiresManual = True
+
+    data = "\n".join(lines)
+    return data, requiresManual
 
 def main():
     wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
@@ -67,10 +149,7 @@ def main():
     mappings = getConflictMappings(contents, "block")
     pprint.pprint(mappings)
 
-    sys.exit(0)
-
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
-
 
     for mod in wantedMods:
         if not contents.has_key(os.path.basename(mod)+".csv"):
@@ -79,6 +158,12 @@ def main():
 
         print "Installing",mod
         modanalyzer.installMod(mod, modsFolder, coremodsFolder)
+
+        modMappings = filter(lambda m: m[0] == os.path.basename(mod), mappings)
+        pprint.pprint(mappings)
+
+        installModConfigs(mod, modMappings)
+
         # TODO: resolve conflicts
 
     #modanalyzer.runServer()
