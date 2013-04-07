@@ -134,6 +134,7 @@ def applyConfigEdit(data, kind, oldId, newId):
     # Find possibly matching lines
     hits = {}
     lines = data.split("\n")
+    comments = []
     for i, line in enumerate(lines):
         line = line.replace("\n", "")
         if line.startswith("%s {" % (kind,)):
@@ -145,20 +146,21 @@ def applyConfigEdit(data, kind, oldId, newId):
             hits[i] = {"old": line, "new": replacement, "section": section, "matchingSection": section == kind}
 
     if len(hits) == 0:
-        lines.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
+        comments.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
         requiresManual = True
     elif len(hits) == 1:
         # just one hit, we know what to do
         n = hits.keys()[0]
-        lines[n] = hits[n]["new"] + "   # was: " + hits[n]["old"].strip()
+        lines[n] = hits[n]["new"]
+        comments.append("# Changed %s: %s -> %s" % (kind, hits[n]["old"], hits[n]["new"]))
     else:
         # ambiguous..
         # TODO: if there is only one matching section, use it! it is not ambiguous
         for n in hits.keys():
-            lines[n] += " # %s # TODO: change one of %s ID %s -> %s" % (hits[n]["new"], kind, oldId, newId)
+            comments.append("# TODO: Change %s -> %s, one of %s ID %s -> %s" % (hits[n]["old"], hits[n]["new"], kind, oldId, newId))
         requiresManual = True
 
-    data = "\n".join(lines)
+    data = "\n".join(lines + comments)
     return data, requiresManual
 
 """Get an estimate of the relative amount of the content in a mod."""
