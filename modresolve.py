@@ -63,23 +63,39 @@ def getConflictMappings(contents, kind):
 
 CONFIG_IGNORE = ["forge.cfg", "forgeChunkLoading.cfg"]  # TODO: exclude from deps in mod analysis
 
-def installModConfigs(mod, modMappings):
+"""Get list of source and target paths for config files of a given mod."""
+def getConfigFiles(mod):
     configDir = modanalyzer.getConfigsDir(mod)
 
+    configs = []
     for name in os.listdir(configDir):
         if name in CONFIG_IGNORE: 
             continue
         sourcePath = os.path.join(configDir, name)
         targetPath = os.path.join(modanalyzer.TEST_SERVER_ROOT, "config", name)
 
+        if os.path.isdir(sourcePath):
+            continue
+
+        configs.append((sourcePath, targetPath))
+
+    return configs
+
+"""Install mod configuration. Returns True if requires additional manual configuration by the user."""
+def installModConfigs(mod, modMappings):
+
+    requiresManual = False
+    for sourcePath, targetPath in getConfigFiles(mod):
         if os.path.exists(targetPath):
             print "FATAL ERROR: installing configs for %s from %s but %s already exists, not overwriting" % (mod, sourcePath, targetPath)
-            sys.exit(-1)
+            #sys.exit(-1)
             # TODO: dep exclusion again
 
         data = file(sourcePath).read()
 
-        data, requiresManual = applyConfigEdits(data, modMappings)
+        data, thisRequiresManual = applyConfigEdits(data, modMappings)
+        if thisRequiresManual: 
+            requiresManual = True
 
         print "Installing %s -> %s [%s]" % (sourcePath, targetPath, len(modMappings))
         if requiresManual:
@@ -87,7 +103,7 @@ def installModConfigs(mod, modMappings):
         mkdirContaining(targetPath)
         file(targetPath, "w").write(data)
 
-    raise SystemExit
+    return requiresManual
 
 """Make the directory containing the given filename, if needed."""
 def mkdirContaining(filename):
@@ -151,6 +167,7 @@ def main():
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
 
+    requiresManual = []
     for mod in wantedMods:
         if not contents.has_key(os.path.basename(mod)+".csv"):
             print "No mod analysis found for %s, please analyze" % (mod,)
@@ -162,11 +179,19 @@ def main():
         modMappings = filter(lambda m: m[0] == os.path.basename(mod), mappings)
         pprint.pprint(mappings)
 
-        installModConfigs(mod, modMappings)
+        if installModConfigs(mod, modMappings):
+            requiresManual.append(mod)
 
-        # TODO: resolve conflicts
-
-    #modanalyzer.runServer()
+    if len(requiresManual) > 0:
+        print "=" * 70
+        for m in requiresManual:
+            print m, "\t", " ".join([x[1] for x in getConfigFiles(m)])
+        print "=" * 70
+        print "The above mods require manual configuration file editing to continue."
+        print "Edit their configs manually appropriately, then start the server."
+    else:
+        print "Ready to go..."
+        modanalyzer.runServer()
 
 if __name__ == "__main__":
     main()
