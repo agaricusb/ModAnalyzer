@@ -5,9 +5,9 @@
 DEP_BLACKLIST = set((
     "mod_MinecraftForge",   # we always have Forge
     "Forge", # typo for mod_MinecraftForge
+    "MinecraftForge", # another typo for mod_MinecraftForge
     "MinecraftForge, CodeChickenCore", # typo for CodeChickenCore, broken string instead of a real list
     "Industrialcraft", # typo for IC2
-
     "GUI_Api", # typo for GuiAPI and not needed on server
     "EurysCore", # replaced by SlimevoidLib?
     "Modular Powersuits", # mmmPowersuits
@@ -50,6 +50,7 @@ REQUIRES_EXTRACTION = {
     "MagicYarn": "mods",
     "Ruins": "mods",
     #"RopePlus": "mods", # not
+    "BetterDungeons": "mods", # but also requires extra files .minecraft..
     }
 
 def getExtraDeps(mod):
