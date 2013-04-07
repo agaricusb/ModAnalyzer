@@ -86,11 +86,6 @@ def installModConfigs(mod, modMappings):
 
     requiresManual = False
     for sourcePath, targetPath in getConfigFiles(mod):
-        if os.path.exists(targetPath):
-            print "FATAL ERROR: installing configs for %s from %s but %s already exists, not overwriting" % (mod, sourcePath, targetPath)
-            sys.exit(-1)
-            # TODO: dep exclusion again
-
         data = file(sourcePath).read()
 
         data, thisRequiresManual = applyConfigEdits(data, modMappings)
@@ -101,7 +96,16 @@ def installModConfigs(mod, modMappings):
         if requiresManual:
             print "NOTICE: manual edits required to %s" % (targetPath,)
         modanalyzer.mkdirContaining(targetPath)
-        file(targetPath, "w").write(data)
+
+        if os.path.exists(targetPath):
+            print "NOTICE: Mod reuses config: installing configs for %s from %s but %s already exists - needs merge" % (mod, sourcePath, targetPath)
+            readme = "\n" + ("#" * 70) + "\n# TODO: Merge from " + modanalyzer.getModName(mod) + "\n" + ("#" * 70) + "\n"
+            data = readme + data
+            requiresManual = True
+            # TODO: try to merge automatically?
+
+
+        file(targetPath, "a").write(data)
 
     return requiresManual
 
@@ -170,7 +174,6 @@ def main():
         modanalyzer.installMod(mod, modsFolder, coremodsFolder)
 
         modMappings = filter(lambda m: m[0] == os.path.basename(mod), mappings)
-        pprint.pprint(mappings)
 
         if installModConfigs(mod, modMappings):
             requiresManual.append(mod)
@@ -181,7 +184,7 @@ def main():
             print m, "\t", " ".join([x[1] for x in getConfigFiles(m)])
         print "=" * 70
         print "The above mods require manual configuration file editing to continue."
-        print "Edit their configs manually appropriately, then start the server."
+        print "Edit their configs appropriately (search for 'TODO'), then start the server."
     else:
         print "Ready to go..."
         modanalyzer.runServer()

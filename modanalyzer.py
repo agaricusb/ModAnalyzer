@@ -117,11 +117,11 @@ def hoopJumper(fn, instructionFolder, dest):
             n = parts.index(instructionFolder)
             path = os.path.sep.join(parts[n + 1:])
             if path.endswith("/") or len(path) == 0:
-                print "Creating",path
+                #print "Creating",path
                 _mkdir(os.path.join(dest, path))
                 continue
 
-            print "Extracting",path
+            #print "Extracting",path
             data = containerZip.read(name)
             file(os.path.join(dest, path), "w").write(data)
 
