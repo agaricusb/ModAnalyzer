@@ -70,14 +70,11 @@ def getConfigFiles(mod):
     configDir = modanalyzer.getConfigsDir(mod)
 
     configs = []
-    for name in os.listdir(configDir):
+    for name in modanalyzer.recursiveListdir(configDir):
         if name in CONFIG_IGNORE: 
             continue
         sourcePath = os.path.join(configDir, name)
         targetPath = os.path.join(modanalyzer.TEST_SERVER_ROOT, "config", name)
-
-        if os.path.isdir(sourcePath):
-            continue
 
         configs.append((sourcePath, targetPath))
 
