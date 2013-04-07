@@ -8,18 +8,20 @@ import re
 import modanalyzer
 import modlist
 
-START_BLOCK_ID = 500      # >256 for future vanilla block expansion, >408 for future itemblocks?
-END_BLOCK_ID = 4095       # maximum, 12-bit
+CONFLICT_KINDS = ("block", "item")  # resolve conflicts on these
+
+ID_RANGES = {
+    "block": range(500, 4096), # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
+    "item": range(5000, 32000),
+    }
 
 """Get an available block ID."""
-def findAvailable(used):
-    # first available (one-fit)
-    # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
-    for i in range(START_BLOCK_ID, END_BLOCK_ID + 1):
+def findAvailable(used, kind):
+    for i in ID_RANGES[kind]:
         if i not in used:
             return i
     print used
-    assert False, "all the blocks are used!"        # if you manage to max out the blocks in legitimate usage, I'd be interested in your mod collection
+    assert False, "all %s are used!" % (kind,)        # if you manage to max out the blocks in legitimate usage, I'd be very interested in your mod collection
 
 def sortModsByPriority(mods, allSortedMods):
     def getPriority(m):
@@ -44,6 +46,8 @@ def getConflictMappings(contents, kind, allSortedMods):
     mappings = []
 
     for id, usingMods in slicedContent.iteritems():
+        if kind == "item" and id < 4096: continue # skip item blocks - TODO: instead check data isItemBlock
+
         if len(usingMods) > 1:
             sortedMods = usingMods.keys()
             sortModsByPriority(sortedMods, allSortedMods)
@@ -56,7 +60,9 @@ def getConflictMappings(contents, kind, allSortedMods):
 
             # Move other mods out of the way
             for conflictingMod in sortedMods:
-                newId = findAvailable(used)
+                # first available (one-fit)
+                # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
+                newId = findAvailable(used, kind)
                 used.add(newId)
                 mappings.append((conflictingMod.replace(".csv", ""), kind, id, newId))
                 print "\tmoving %s %s -> %s" % (conflictingMod, id, newId)
@@ -127,6 +133,11 @@ def installModConfigs(mod, modMappings):
 def applyConfigEdit(data, kind, oldId, newId):
     section = None
     requiresManual = False
+
+    if kind == "item":
+        # ugh
+        oldId -= 256
+        newId -= 256
 
     # Find possibly matching lines
     hits = {}
@@ -208,7 +219,9 @@ def main():
 
     allSortedMods = sortAllMods(contents)
 
-    mappings = getConflictMappings(contents, "block", allSortedMods)
+    mappings = []
+    for kind in CONFLICT_KINDS:
+        mappings += getConflictMappings(contents, kind, allSortedMods)
     pprint.pprint(mappings)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
