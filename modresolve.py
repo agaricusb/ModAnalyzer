@@ -21,21 +21,23 @@ def findAvailable(used):
     print used
     assert False, "all the blocks are used!"        # if you manage to max out the blocks in legitimate usage, I'd be interested in your mod collection
 
-"""Get two mod names sorted by their ID resolution priority."""
-def sortModByPriority(a, b):
-    #return cmp(a.lower(), b.lower())
-    return cmp(b.lower(), a.lower())
+def sortModsByPriority(mods, allSortedMods):
+    def getPriority(m):
+        if m.startswith("Minecraft"): return -1
+        return allSortedMods.index(modanalyzer.getModName(m.replace(".csv", "")))
+
+    mods.sort(cmp=lambda a, b: cmp(getPriority(b), getPriority(a)))
 
 """Get whether this mod list contains a vanilla override, which should not be resolved."""
-def vanillaOverride(sortedMods):
-    for s in sortedMods:
-        if s.startswith("Minecraft"):
+def vanillaOverride(mods):
+    for m in mods:
+        if m.startswith("Minecraft"):
             return True
 
     return False
 
 """Get a list of edits of tuples (mod,kind,id,newId) to resolve ID conflicts of 'kind'."""
-def getConflictMappings(contents, kind):
+def getConflictMappings(contents, kind, allSortedMods):
     slicedContent = modlist.sliceAcross(contents, kind)
 
     used = set(slicedContent.keys())
@@ -44,7 +46,7 @@ def getConflictMappings(contents, kind):
     for id, usingMods in slicedContent.iteritems():
         if len(usingMods) > 1:
             sortedMods = usingMods.keys()
-            sortedMods.sort(cmp=sortModByPriority)
+            sortModsByPriority(sortedMods, allSortedMods)
 
             if vanillaOverride(sortedMods):
                 continue
@@ -53,7 +55,7 @@ def getConflictMappings(contents, kind):
             print "\tkeeping",sortedMods.pop()  # it gets the ID
 
             # Move other mods out of the way
-            for conflictingMod in usingMods.keys():
+            for conflictingMod in sortedMods:
                 newId = findAvailable(used)
                 used.add(newId)
                 mappings.append((conflictingMod.replace(".csv", ""), kind, id, newId))
@@ -96,6 +98,7 @@ def installModConfigs(mod, modMappings):
         success = False
         for targetPath, data in editingConfigs.iteritems():
             data, thisFailed = applyConfigEdit(data, kind, oldId, newId)
+            editingConfigs[targetPath] = data
             if not thisFailed: 
                 success = True
                 break
@@ -137,7 +140,9 @@ def applyConfigEdit(data, kind, oldId, newId):
             section = kind
 
         if line.endswith("=%s" % (oldId)):
-            hits[i] = {"old": line, "new": re.sub(r"\d+$", str(newId), line), "section": section, "matchingSection": section == kind}
+            replacement = re.sub(r"\d+$", str(newId), line)
+            assert replacement != line, "Failed to replace matched config line %s for %s -> %s" % (line, oldId, newId)
+            hits[i] = {"old": line, "new": replacement, "section": section, "matchingSection": section == kind}
 
     if len(hits) == 0:
         lines.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
@@ -156,12 +161,40 @@ def applyConfigEdit(data, kind, oldId, newId):
     data = "\n".join(lines)
     return data, requiresManual
 
+"""Get an estimate of the relative amount of the content in a mod."""
+def getModGirth(contents, mod):
+    key = modanalyzer.getModName(mod) + ".csv"
+    if not contents.has_key(key):
+        print "No mod analysis found for %s, please analyze" % (mod,)
+        sys.exit(-1)
+
+    content = contents[key]
+
+    blocks = content.get("block", [])
+
+    girth = len(blocks) * 1000 + len(content) # TODO: more in-depth analysis, weights for different content types? (blocks > item?)
+
+    return girth
+
+"""Sort all mods by priority."""
+def sortAllMods(contents):
+    mods = os.listdir(modanalyzer.ALL_MODS_DIR) 
+
+    # default priority
+    mods.sort(cmp=lambda a, b: cmp(getModGirth(contents, b), getModGirth(contents, a)))
+
+    file("priority.txt", "w").write("\n".join(mods))   # TODO: configurable; re-read
+
+    return mods
+
 def main():
     wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
 
     contents = modanalyzer.load()
 
-    mappings = getConflictMappings(contents, "block")
+    allSortedMods = sortAllMods(contents)
+
+    mappings = getConflictMappings(contents, "block", allSortedMods)
     pprint.pprint(mappings)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
