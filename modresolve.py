@@ -11,14 +11,23 @@ import modlist
 def findAvailable(used):
     # first available (one-fit)
     # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
-    for i in range(0, 4096):
+    for i in range(1, 4096):
         if i not in used:
             return i
     print used
     assert False, "all the blocks are used!"        # if you manage to max out the blocks in legitimate usage, I'd be interested in your mod collection
 
+"""Get two mod names sorted by their ID resolution priority."""
 def sortModByPriority(a, b):
     return cmp(a.lower(), b.lower())
+
+"""Get whether this mod list contains a vanilla override, which should not be resolved."""
+def vanillaOverride(sortedMods):
+    for s in sortedMods:
+        if s.startswith("Minecraft"):
+            return True
+
+    return False
 
 def main():
     wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
@@ -32,9 +41,13 @@ def main():
 
     for id, usingMods in slicedBlocks.iteritems():
         if len(usingMods) > 1:
-            print "Conflict at",id
             sortedMods = usingMods.keys()
             sortedMods.sort(cmp=sortModByPriority)
+
+            if vanillaOverride(sortedMods):
+                continue
+
+            print "Conflict at",id
             print "\tkeeping",sortedMods.pop()  # it gets the ID
 
             # Move other mods out of the way
