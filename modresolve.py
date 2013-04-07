@@ -32,17 +32,14 @@ def vanillaOverride(sortedMods):
 
     return False
 
-def main():
-    wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
+"""Get a list of edits of tuples (mod,kind,id,newId) to resolve ID conflicts of 'kind'."""
+def getConflictMappings(contents, kind):
+    slicedContent = modlist.sliceAcross(contents, kind)
 
-    contents = modanalyzer.load()
-
-    slicedBlocks = modlist.sliceAcross(contents, "block")
-
-    used = set(slicedBlocks.keys())
+    used = set(slicedContent.keys())
     mappings = []
 
-    for id, usingMods in slicedBlocks.iteritems():
+    for id, usingMods in slicedContent.iteritems():
         if len(usingMods) > 1:
             sortedMods = usingMods.keys()
             sortedMods.sort(cmp=sortModByPriority)
@@ -57,9 +54,17 @@ def main():
             for conflictingMod in usingMods.keys():
                 newId = findAvailable(used)
                 used.add(newId)
-                mappings.append((conflictingMod, "block", id, newId))
+                mappings.append((conflictingMod, kind, id, newId))
                 print "\tmoving %s %s -> %s" % (conflictingMod, id, newId)
 
+    return mappings
+
+def main():
+    wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
+
+    contents = modanalyzer.load()
+
+    mappings = getConflictMappings(contents, "block")
     pprint.pprint(mappings)
 
     sys.exit(0)
