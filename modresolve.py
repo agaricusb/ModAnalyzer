@@ -8,7 +8,7 @@ import re
 import modanalyzer
 import modlist
 
-CONFLICT_KINDS = ("block", "item")  # resolve conflicts on these
+CONFLICT_KINDS = ("block", "item", "biome")  # resolve conflicts on these
 
 ID_RANGES = {
     "block": range(500, 4096), # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
@@ -55,7 +55,7 @@ def getConflictMappings(contents, kind, allSortedMods):
             if vanillaOverride(sortedMods):
                 continue
 
-            print "Conflict at",id
+            print "Conflict on %s at %s" % (kind, id)
             print "\tkeeping",sortedMods.pop()  # it gets the ID
 
             # Move other mods out of the way
