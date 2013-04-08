@@ -1,13 +1,17 @@
 package agaricus.mods.modanalyzer;
 
 import cpw.mods.fml.common.FMLLog;
+import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.Mod;
 import cpw.mods.fml.common.Mod.PostInit;
 import cpw.mods.fml.common.Mod.PreInit;
+import cpw.mods.fml.common.TickType;
 import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
 import net.minecraft.enchantment.Enchantment;
@@ -22,6 +26,7 @@ import net.minecraftforge.oredict.OreDictionary;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -29,7 +34,9 @@ import java.util.logging.Level;
 
 @Mod(modid = "ModAnalyzer", name = "ModAnalyzer", version = "1.0-SNAPSHOT") // TODO: version from resource
 @NetworkMod(clientSideRequired = false, serverSideRequired = false)
-public class ModAnalyzer {
+public class ModAnalyzer implements ITickHandler {
+
+    private boolean initialized = false;
 
     @PreInit
     public void preInit(FMLPreInitializationEvent event) {
@@ -42,6 +49,19 @@ public class ModAnalyzer {
     @PostInit
     public void postInit(FMLPostInitializationEvent event) {
         FMLLog.log(Level.FINE, "Loading ModAnalyzer...");
+
+        TickRegistry.registerTickHandler(this, Side.SERVER);
+        //TickRegistry.registerTickHandler(this, Side.CLIENT); // TODO
+    }
+
+    @Override
+    public void tickEnd(EnumSet<TickType> type, Object... tickData) {
+        if (initialized) {
+            return;
+        }
+        initialized = true;
+
+        FMLLog.log(Level.FINE, "ModAnalyzer analyzing...");
 
         dumpBlocks();
         dumpItems();
@@ -61,6 +81,20 @@ public class ModAnalyzer {
         }
 
         Runtime.getRuntime().halt(0);
+    }
+
+    @Override
+    public EnumSet<TickType> ticks() {
+        return EnumSet.of(TickType.SERVER);
+    }
+
+    @Override
+    public void tickStart(EnumSet<TickType> type, Object... tickData) {
+    }
+
+    @Override
+    public String getLabel() {
+        return "ModAnalyzer";
     }
 
     private void dumpBlocks() {
