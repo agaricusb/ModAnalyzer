@@ -66,6 +66,8 @@ def fixDeps(mod, deps):
     deps -= DEP_BLACKLIST
     deps |= getExtraDeps(mod)
 
+    deps = [dep.split("@")[0] for dep in deps]  # remove version constraints
+
     return deps
 
 
