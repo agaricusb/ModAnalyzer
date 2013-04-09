@@ -11,12 +11,15 @@ import modlist
 CONFLICT_KINDS = ("block", "item", "biome")  # resolve conflicts on these
 
 ID_RANGES = {
-    "block": range(500, 4096), # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
+    "block": range(500, 4096),  # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
+    "blocktg": range(0, 256),   # terrain generation blocks
     "item": range(5000, 32000),
+    "biome": range(0, 256),
     }
 
 """Get an available block ID."""
-def findAvailable(used, kind):
+def findAvailable(used, kind, current):
+    if kind == "block" and current < 256: kind = "blocktg" # preserve <256 requirement for likely terrain gen blocks
     for i in ID_RANGES[kind]:
         if i not in used:
             return i
@@ -62,7 +65,7 @@ def getConflictMappings(contents, kind, allSortedMods):
             for conflictingMod in sortedMods:
                 # first available (one-fit)
                 # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
-                newId = findAvailable(used, kind)
+                newId = findAvailable(used, kind, id)
                 used.add(newId)
                 mappings.append((conflictingMod.replace(".csv", ""), kind, id, newId))
                 print "\tmoving %s %s -> %s" % (conflictingMod, id, newId)
