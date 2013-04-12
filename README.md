@@ -32,3 +32,4 @@ Examples:
 
 Released as open source under the BSD license, redistribution, changes, forks, pull requests, etc. welcome.
 
+[![Build Status](https://buildhive.cloudbees.com/job/agaricusb/job/ModAnalyzer/badge/icon)](https://buildhive.cloudbees.com/job/agaricusb/job/ModAnalyzer/)
