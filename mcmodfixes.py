@@ -8,6 +8,7 @@ DEP_BLACKLIST = set((
     "FML", # we always have FML
     "MinecraftForge", # another typo for mod_MinecraftForge
     "MinecraftForge, CodeChickenCore", # typo for CodeChickenCore, broken string instead of a real list
+    "MinecraftForge,CoFHCore", # typo for ["MinecraftForge","CoFHCore"]
     "Industrialcraft", # typo for IC2
     "GUI_Api", # typo for GuiAPI and not needed on server
     "EurysCore", # replaced by SlimevoidLib?
@@ -28,6 +29,7 @@ DEP_ADDITIONS = {
     "EnderStorage": ["CodeChickenCore"],
     "TrailMix": ["iChunUtil"],
     "MPSA": ["mmmPowersuits"],
+    "ThermalExpansion": ["CoFHCore"],
     }
 
 MOD_IDS = {
