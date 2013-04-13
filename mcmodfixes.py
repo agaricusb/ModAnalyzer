@@ -2,6 +2,8 @@
 
 # Fixes and mod-specific data for various mods' mcmod.info files
 
+import fnmatch
+
 DEP_BLACKLIST = set((
     "mod_MinecraftForge",   # we always have Forge
     "Forge", # typo(?) for mod_MinecraftForge
@@ -33,7 +35,8 @@ DEP_ADDITIONS = {
     }
 
 MOD_IDS = {
-    "PowerCrystalsCore": ["PowerCrystalsCore"],
+    "PowerCrystalsCore*": ["PowerCrystalsCore"],
+    "*bspkrsCore*": ["mod_bspkrsCore"], # newline in json, can't parse
     }
 
 FILENAME_HAS_NO_VERSION = [
@@ -69,7 +72,7 @@ def fixDeps(mod, deps):
 
 def fixModIDs(mod, ids):
     for k, v in MOD_IDS.iteritems():
-        if mod.startswith(k):
+        if fnmatch.fnmatch(mod, k):
             return v 
 
     return ids

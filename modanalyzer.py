@@ -202,7 +202,7 @@ def readMcmodInfo(fn):
                 mcmod = json.loads(raw_json)
             except ValueError as e:
                 #print raw_json
-                #print "BROKEN JSON!",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
+                print "This mod has unparseable JSON in mcmod.info:",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
                 mcmod = []
         else:
             mcmod = []
@@ -221,7 +221,7 @@ def readMcmodInfo(fn):
 """Get submod dict from a top-level mod info dict from readMcmodInfo()."""
 def getSubInfo(info):
     if isinstance(info["info"], types.DictType):
-        subs = info["info"].get("modlist", [])  # AE - top-level dictionary
+        subs = info["info"].get("modlist", [])  # AE, bspkrsCore - top-level dictionary
     else:
         subs = info["info"] # top-level array
     return subs
