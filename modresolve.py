@@ -138,9 +138,12 @@ def applyConfigEdit(data, kind, oldId, newId):
     requiresManual = False
 
     if kind == "item":
-        # ugh
+        # ugh - shifted IDs. TODO: support immibis' unshifted IDs
         oldId -= 256
         newId -= 256
+
+    # id kinds which might collide with other kinds, restrict ourselves to Forge sections
+    mustMatchSection = kind in ("biome")
 
     # Find possibly matching lines
     hits = {}
@@ -154,7 +157,11 @@ def applyConfigEdit(data, kind, oldId, newId):
         if line.endswith("=%s" % (oldId)):
             replacement = re.sub(r"\d+$", str(newId), line)
             assert replacement != line, "Failed to replace matched config line %s for %s -> %s" % (line, oldId, newId)
-            hits[i] = {"old": line, "new": replacement, "section": section, "matchingSection": section == kind}
+
+            matchingSection = section == kind
+            if mustMatchSection and not matchingSection: continue  # probably not this
+
+            hits[i] = {"old": line, "new": replacement, "section": section, "matchingSection": matchingSection}
 
     if len(hits) == 0:
         comments.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
