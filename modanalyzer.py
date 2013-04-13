@@ -202,7 +202,7 @@ def readMcmodInfo(fn):
                 mcmod = json.loads(raw_json)
             except ValueError as e:
                 #print raw_json
-                print "This mod has unparseable JSON in mcmod.info:",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
+                #print "This mod has unparseable JSON in mcmod.info:",e,fn # FML uses a more lenient JSON parser than Python's json module TODO: be more lenient
                 mcmod = []
         else:
             mcmod = []
