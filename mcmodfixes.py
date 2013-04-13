@@ -32,15 +32,16 @@ DEP_ADDITIONS = {
     "TrailMix": ["iChunUtil"],
     "MPSA": ["mmmPowersuits"],
     "ThermalExpansion": ["CoFHCore"],
-    "BasicComponents": ["UniversalElectricity"],
-    "ElectricExpansion": ["UniversalElectricity", "BasicComponents"],
+    "ElectricExpansion": ["BasicComponents"],
+    "OpenCCSensors": ["ComputerCraft"],
+    "Translocator": ["CodeChickenCore"],
+    "miscperipherals": ["ComputerCraft"],
     }
 
 MOD_IDS = {
     "PowerCrystalsCore*": ["PowerCrystalsCore"],
     "*bspkrsCore*": ["mod_bspkrsCore"], # newline in json, can't parse
     "BasicComponents*": ["BasicComponents"], # no mcmod.info
-    "UniversalElectricity*": ["UniversalElectricity"], # no mcmod.info TODO: pr https://github.com/calclavia/Universal-Electricity
     }
 
 FILENAME_HAS_NO_VERSION = [
