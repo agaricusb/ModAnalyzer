@@ -86,11 +86,14 @@ def analyzeMod(fn, others=[]):
     # running the server will load the analyzer, then quit
     runServer()
 
+def isCoremod(fn):
+    return readMcmodInfo(fn)["isCoremod"]
+
 def installMod(fn, modsFolder, coremodsFolder):
     if fn is None: 
         return
 
-    if mcmodfixes.isCoremod(getModName(fn)):
+    if isCoremod(fn):
         dest = coremodsFolder
     else:
         dest = modsFolder
@@ -204,9 +207,15 @@ def readMcmodInfo(fn):
         else:
             mcmod = []
 
+        if "META-INF/MANIFEST.MF" in modZip.namelist():
+            isCoremod = "FMLCorePlugin" in modZip.read("META-INF/MANIFEST.MF")
+            if isCoremod: print "Found coremod:",fn
+        else:
+            isCoremod = False
+
         # Filename and hash is essential
         h = hashlib.sha256(file(fn).read()).hexdigest()
-        mod = {"filename":fn, "sha256":h, "info":mcmod}
+        mod = {"filename":fn, "sha256":h, "info":mcmod, "isCoremod": isCoremod}
     return mod
 
 """Get submod dict from a top-level mod info dict from readMcmodInfo()."""

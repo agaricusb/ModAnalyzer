@@ -34,12 +34,6 @@ MOD_IDS = {
     "PowerCrystalsCore": ["PowerCrystalsCore"],
     }
 
-COREMODS = [ # TODO: auto-detect
-    "PowerCrystalsCore", 
-    "immibis-microblocks",
-    "CodeChickenCore",
-    ]
-
 FILENAME_HAS_NO_VERSION = [
     "gregtechmod.zip", # "If you are unsure about your Version, look at the "mcmod.info" inside the zip, just open it with Notepad."
     ]
@@ -77,12 +71,6 @@ def fixModIDs(mod, ids):
             return v 
 
     return ids
-
-def isCoremod(fn):
-    for k in COREMODS:
-        if fn.startswith(k):
-            return True
-    return False 
 
 def modNeedsRename(fn):
     for k in FILENAME_HAS_NO_VERSION:
