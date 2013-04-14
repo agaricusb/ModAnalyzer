@@ -38,6 +38,8 @@ DEP_ADDITIONS = {
     "Translocator": ["CodeChickenCore"],
     "miscperipherals": ["ComputerCraft"],
     "chargepads": ["NotEnoughItems"],
+    "MekanismGenerators": ["Mekanism"],
+    "MekanismTools": ["Mekanism"],
     }
 
 MOD_IDS = {
