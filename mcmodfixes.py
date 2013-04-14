@@ -15,6 +15,7 @@ DEP_BLACKLIST = set((
     "GUI_Api", # typo for GuiAPI and not needed on server
     "EurysCore", # replaced by SlimevoidLib?
     "Modular Powersuits", # mmmPowersuits
+    "mod_NotEnoughItems", # chargepads
     ))
 
 
@@ -36,6 +37,7 @@ DEP_ADDITIONS = {
     "OpenCCSensors": ["ComputerCraft"],
     "Translocator": ["CodeChickenCore"],
     "miscperipherals": ["ComputerCraft"],
+    "chargepads": ["NotEnoughItems"],
     }
 
 MOD_IDS = {
