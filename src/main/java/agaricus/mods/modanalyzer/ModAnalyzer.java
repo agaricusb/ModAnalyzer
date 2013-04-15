@@ -166,24 +166,28 @@ public class ModAnalyzer implements ITickHandler {
                 ItemStack itemStack = new ItemStack(item, 1, 0);
                 setObject("item", i);
                 put("id", i);
-                put("itemStackLimit", item.getItemStackLimit());
-                put("hasSubtypes", item.getHasSubtypes());
-                put("maxDamage", item.getMaxDamage());
-                put("isDamageable", item.isDamageable());
-                put("localizedName", item.getLocalizedName(itemStack));
-                put("unlocalizedName", item.getUnlocalizedName());
-                put("hasContainerItem", item.hasContainerItem());
-                put("statName", item.getStatName());
-                put("isMap", item.isMap());
-                put("itemUseAction", item.getItemUseAction(itemStack).name());
-                put("maxItemUseDuration", item.getMaxItemUseDuration(itemStack));
-                put("potionEffect", item.getPotionEffect());
-                put("isPotionIngredient", item.isPotionIngredient());
-                put("itemDisplayName", item.getItemDisplayName(itemStack));
-                put("isItemTool", item.isItemTool(itemStack));
-                put("enchantability", item.getItemEnchantability());
-                put("isRepairable", item.isRepairable());
-                put("isItemBlock", item instanceof ItemBlock);
+                try {
+                    put("itemStackLimit", item.getItemStackLimit());
+                    put("hasSubtypes", item.getHasSubtypes());
+                    put("maxDamage", item.getMaxDamage());
+                    put("isDamageable", item.isDamageable());
+                    put("localizedName", item.getLocalizedName(itemStack));
+                    put("unlocalizedName", item.getUnlocalizedName());
+                    put("hasContainerItem", item.hasContainerItem());
+                    put("statName", item.getStatName());
+                    put("isMap", item.isMap());
+                    put("itemUseAction", item.getItemUseAction(itemStack).name());
+                    put("maxItemUseDuration", item.getMaxItemUseDuration(itemStack));
+                    put("potionEffect", item.getPotionEffect());
+                    put("isPotionIngredient", item.isPotionIngredient());
+                    put("itemDisplayName", item.getItemDisplayName(itemStack));
+                    put("isItemTool", item.isItemTool(itemStack));
+                    put("enchantability", item.getItemEnchantability());
+                    put("isRepairable", item.isRepairable());
+                    put("isItemBlock", item instanceof ItemBlock);
+                } catch (Throwable t) {
+                    put("exception", t.getMessage());
+                }
             }
         }
     }
