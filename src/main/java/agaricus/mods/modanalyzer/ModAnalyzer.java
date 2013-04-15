@@ -1,5 +1,6 @@
 package agaricus.mods.modanalyzer;
 
+import com.google.common.base.Joiner;
 import cpw.mods.fml.common.FMLLog;
 import cpw.mods.fml.common.ITickHandler;
 import cpw.mods.fml.common.Mod;
@@ -22,17 +23,14 @@ import net.minecraft.entity.EntityList;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemBlock;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.crafting.FurnaceRecipes;
+import net.minecraft.item.crafting.*;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.oredict.OreDictionary;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.EnumSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Level;
 
 @Mod(modid = "ModAnalyzer", name = "ModAnalyzer", version = "1.0-SNAPSHOT") // TODO: version from resource
@@ -73,7 +71,7 @@ public class ModAnalyzer implements ITickHandler {
         dumpEntities();
         dumpSmeltingRecipes();
         dumpOreDict();
-        // TODO: crafting recipes
+        dumpCraftingRecipes();
 
         try {
             BufferedWriter out = new BufferedWriter(new FileWriter("mod-analysis.csv"));
@@ -251,6 +249,7 @@ public class ModAnalyzer implements ITickHandler {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private void dumpSmeltingRecipes() {
         for (Map.Entry<Integer, ItemStack> entry : ((Map<Integer, ItemStack>) FurnaceRecipes.smelting().getSmeltingList()).entrySet()) {
             int itemID = entry.getKey();
@@ -273,12 +272,12 @@ public class ModAnalyzer implements ITickHandler {
      * Get a hopefully globally-unique name for the given item ID
      */
     public String getGlobalItemName(int itemID) {
-        // Get the mod owning this item, if any
+        // get the mod owning this item, if any
         Map<Integer, ItemData> idMap = ReflectionHelper.getPrivateValue(GameData.class, null, "idMap"); // TODO: ask lex
         ItemData itemData = idMap.get(itemID);
         String modID = itemData != null ? itemData.getModId() : "Minecraft";
 
-        // Use internal item name, if it has one
+        // use internal item name, if it has one
         String itemName = null;
         try {
             Item item = Item.itemsList[itemID];
@@ -298,6 +297,26 @@ public class ModAnalyzer implements ITickHandler {
         return getGlobalItemName(itemID) + ":" + meta;
     }
 
+    public String getGlobalItemName(ItemStack itemStack) {
+        return getGlobalItemName(itemStack.itemID, itemStack.getItemDamage()); // TODO: NBT
+    }
+
+    public String getGlobalItemNamesSorted(List list) {
+        List<String> strings = new ArrayList<String>();
+
+        for (Object object : list) {
+            if (object instanceof ItemStack) {
+                strings.add(getGlobalItemName((ItemStack) object));
+            } else {
+                strings.add(""+object);
+            }
+        }
+
+        Collections.sort(strings);
+
+        return Joiner.on(";").join(strings);
+    }
+
     private void dumpOreDict() {
         for (String oreName : OreDictionary.getOreNames()) {
             for (ItemStack oreItem : OreDictionary.getOres(oreName)) {
@@ -305,6 +324,33 @@ public class ModAnalyzer implements ITickHandler {
                 setObject("oredict", toString(oreItem));
                 put("name", oreName);
             }
+        }
+    }
+
+    public void dumpCraftingRecipes() {
+        for (Object object : CraftingManager.getInstance().getRecipeList()) {
+            if (!(object instanceof IRecipe)) {
+                continue;
+            }
+
+            IRecipe recipe = (IRecipe) object;
+
+            ItemStack output = recipe.getRecipeOutput();
+
+            if (recipe instanceof ShapelessRecipes) {
+                // sort the IDs, since the recipe ingredients can be input in any order, and we want it consistent
+                String globalID = getGlobalItemNamesSorted(((ShapelessRecipes) recipe).recipeItems);
+
+                setObject("recipes/crafting/shapeless", globalID);
+                int n = 0;
+                for (Object ingredient : ((ShapelessRecipes) recipe).recipeItems) {
+                    put("ingredient." + n, toString(ingredient));
+                    ++n;
+                }
+
+                put("output", toString(output));
+            }
+            // TODO: more types
         }
     }
 
@@ -408,6 +454,16 @@ public class ModAnalyzer implements ITickHandler {
         // or something from smbarbour? or custom?
 
         return sb.toString();
+    }
+
+    private String toString(Object object) {
+        if (object instanceof ItemStack) {
+            return toString((ItemStack) object);
+        } else if (object instanceof Material) {
+            return toString((Material) object);
+        } else {
+            return ""+object;
+        }
     }
 }
 
