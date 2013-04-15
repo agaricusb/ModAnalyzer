@@ -8,7 +8,8 @@ import re
 import modanalyzer
 import modlist
 
-CONFLICT_KINDS = ("block", "item", "biome")  # resolve conflicts on these
+CHECK_CONFLICT_KINDS = ("block", "item", "biome", "recipes/smelting")  # check for conflicts on these
+RESOLVE_CONFLICT_KINDS = ("block", "item", "biome")
 
 ID_RANGES = {
     "block": range(500, 4096),  # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
@@ -59,7 +60,13 @@ def getConflictMappings(contents, kind, allSortedMods):
                 continue
 
             print "Conflict on %s at %s" % (kind, id)
-            print "\tkeeping",sortedMods.pop()  # it gets the ID
+            print "\tkeeping %s %s:%s" % (sortedMods.pop(), kind, id)  # it gets the ID
+
+            if kind not in RESOLVE_CONFLICT_KINDS:
+                # some conflicts we can't do much about, just alert them
+                for conflictingMod in sortedMods:
+                    print "\tkeeping %s %s:%s" % (conflictingMod, kind, id)
+                continue
 
             # Move other mods out of the way
             for conflictingMod in sortedMods:
@@ -138,7 +145,7 @@ def applyConfigEdit(data, kind, oldId, newId):
     requiresManual = False
 
     if kind == "item":
-        # ugh - shifted IDs. TODO: support immibis' unshifted IDs
+        # ugh - shifted IDs. TODO: support immibis' and Briman's unshifted IDs
         oldId -= 256
         newId -= 256
 
@@ -164,6 +171,8 @@ def applyConfigEdit(data, kind, oldId, newId):
             hits[i] = {"old": line, "new": replacement, "section": section, "matchingSection": matchingSection}
 
     if len(hits) == 0:
+        # couldn't find it
+        # TODO: special-case some mods?
         comments.append("# TODO: change %s ID %s -> %s" % (kind, oldId, newId))
         requiresManual = True
     elif len(hits) == 1:
@@ -192,7 +201,9 @@ def getModGirth(contents, mod):
 
     blocks = content.get("block", [])
 
-    girth = len(blocks) * 1000 + len(content) # TODO: more in-depth analysis, weights for different content types? (blocks > item?)
+    girth = len(blocks) * 1000 + len(content) 
+    # TODO: more in-depth analysis, weights for different content types? (blocks > item?)
+    # TODO: also factor in id 'immobility', higher priority if can't move?
 
     return girth
 
@@ -230,7 +241,7 @@ def main():
     allSortedMods = sortAllMods(contents)
 
     mappings = []
-    for kind in CONFLICT_KINDS:
+    for kind in CHECK_CONFLICT_KINDS:
         mappings += getConflictMappings(contents, kind, allSortedMods)
     pprint.pprint(mappings)
 
