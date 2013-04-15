@@ -331,6 +331,18 @@ def recursiveListdir(d):
             output.append(os.path.join(lastPath, f))
     return output
 
+"""Get all dependencies filenames of a mod given its filename, including subdependencies, ad infinitum, as a set."""
+def getRecursiveDepsFilenames(mod):
+    global fn2depsfn
+    
+    allDeps = set()
+
+    for dep in fn2depsfn[mod]:
+        allDeps.add(dep)
+        allDeps |= getRecursiveDepsFilenames(dep)
+
+    return allDeps
+
 """Get analyzed mod content lines, possibly cached."""
 def getModAnalysis(mod):
     global fn2depsfn, forceRescan
@@ -340,7 +352,7 @@ def getModAnalysis(mod):
         print "Reusing cached",getModName(mod)
         return file(infoFile).readlines()
 
-    deps = fn2depsfn[mod]
+    deps = getRecursiveDepsFilenames(mod)
 
     analyzeMod(mod, deps)
 
@@ -352,7 +364,7 @@ def getModAnalysis(mod):
 
     # everything depends on vanilla ("None"), except vanilla
     if mod is not None:
-        allDeps = [None] + deps
+        allDeps = set([None]) | deps
     else:
         allDeps = deps
 
@@ -391,7 +403,7 @@ def load():
     return contents
 
 def main():
-    global fn2depsfn, forceRescan
+    global fn2depsfn, fn2deps, forceRescan
 
     forceRescan = False
 
