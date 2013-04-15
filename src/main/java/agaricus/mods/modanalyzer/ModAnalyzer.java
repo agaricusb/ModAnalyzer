@@ -10,7 +10,10 @@ import cpw.mods.fml.common.event.FMLInitializationEvent;
 import cpw.mods.fml.common.event.FMLPostInitializationEvent;
 import cpw.mods.fml.common.event.FMLPreInitializationEvent;
 import cpw.mods.fml.common.network.NetworkMod;
+import cpw.mods.fml.common.registry.GameData;
+import cpw.mods.fml.common.registry.ItemData;
 import cpw.mods.fml.common.registry.TickRegistry;
+import cpw.mods.fml.relauncher.ReflectionHelper;
 import cpw.mods.fml.relauncher.Side;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -166,6 +169,7 @@ public class ModAnalyzer implements ITickHandler {
                 ItemStack itemStack = new ItemStack(item, 1, 0);
                 setObject("item", i);
                 put("id", i);
+                put("gid", getGlobalItemName(i));
                 try {
                     put("itemStackLimit", item.getItemStackLimit());
                     put("hasSubtypes", item.getHasSubtypes());
@@ -251,16 +255,47 @@ public class ModAnalyzer implements ITickHandler {
         for (Map.Entry<Integer, ItemStack> entry : ((Map<Integer, ItemStack>) FurnaceRecipes.smelting().getSmeltingList()).entrySet()) {
             int itemID = entry.getKey();
             ItemStack output = entry.getValue();
-            setObject("recipes/smelting", itemID);
+            setObject("recipes/smelting", getGlobalItemName(itemID));
+            put("input", itemID);
             put("output", toString(output));
         }
         for (Map.Entry<List<Integer>, ItemStack> entry : FurnaceRecipes.smelting().getMetaSmeltingList().entrySet()) {
             int itemID = entry.getKey().get(0);
             int meta = entry.getKey().get(1);
             ItemStack output = entry.getValue();
-            setObject("recipes/smelting", itemID + ":" + meta);
+            setObject("recipes/smelting", getGlobalItemName(itemID, meta));
+            put("input", itemID + ":" + meta);
             put("output", toString(output));
         }
+    }
+
+    /**
+     * Get a hopefully globally-unique name for the given item ID
+     */
+    public String getGlobalItemName(int itemID) {
+        // Get the mod owning this item, if any
+        Map<Integer, ItemData> idMap = ReflectionHelper.getPrivateValue(GameData.class, null, "idMap"); // TODO: ask lex
+        ItemData itemData = idMap.get(itemID);
+        String modID = itemData != null ? itemData.getModId() : "Minecraft";
+
+        // Use internal item name, if it has one
+        String itemName = null;
+        try {
+            Item item = Item.itemsList[itemID];
+            itemName = item.getUnlocalizedName();
+        } catch (Throwable t) {
+        }
+
+        // .. or fallback to numeric
+        if (itemName == null || itemName.equals("tile.null") || itemName.equals("item.null")) {
+            itemName = "id" + itemID;
+        }
+
+        return modID + "/" + itemName;
+    }
+
+    public String getGlobalItemName(int itemID, int meta) {
+        return getGlobalItemName(itemID) + ":" + meta;
     }
 
     private void dumpOreDict() {
