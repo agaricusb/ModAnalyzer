@@ -299,6 +299,7 @@ public class ModAnalyzer implements ITickHandler {
     }
 
     public String getGlobalItemName(ItemStack itemStack) {
+        if (itemStack == null) return "null";
         return getGlobalItemName(itemStack.itemID, itemStack.getItemDamage()); // TODO: NBT
     }
 
@@ -360,6 +361,23 @@ public class ModAnalyzer implements ITickHandler {
                 setObject("recipes/crafting/shapeless", globalID);
 
                 dumpIngredientList(((ShapelessOreRecipe) recipe).getInput());
+                put("output", toString(output));
+
+            } else if (recipe instanceof ShapedRecipes) {
+                StringBuilder sb = new StringBuilder();
+                ItemStack[] recipeItems = ((ShapedRecipes) recipe).recipeItems;
+
+                for (int i = 0; i < recipeItems.length; ++i) {
+                    sb.append(getGlobalItemName(recipeItems[i]));
+                    if (i % ((ShapedRecipes) recipe).recipeWidth == 0)  {
+                        sb.append("/");
+                    } else {
+                        sb.append(";");
+                    }
+                }
+
+                setObject("recipes/crafting/shaped", sb.toString());
+
                 put("output", toString(output));
             }
             // TODO: more types
