@@ -26,6 +26,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.*;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
@@ -307,8 +308,18 @@ public class ModAnalyzer implements ITickHandler {
         for (Object object : list) {
             if (object instanceof ItemStack) {
                 strings.add(getGlobalItemName((ItemStack) object));
-            } else {
-                strings.add(""+object);
+            } else if (object instanceof List) {
+                // oredict alternatives
+                StringBuilder sb = new StringBuilder();
+                List<String> elements = new ArrayList<String>();
+
+                for (Object element : (List) object) {
+                    elements.add(getGlobalItemName((ItemStack) element));
+                }
+
+                Collections.sort(elements);
+
+                strings.add(Joiner.on(",").join(elements));
             }
         }
 
@@ -340,17 +351,26 @@ public class ModAnalyzer implements ITickHandler {
             if (recipe instanceof ShapelessRecipes) {
                 // sort the IDs, since the recipe ingredients can be input in any order, and we want it consistent
                 String globalID = getGlobalItemNamesSorted(((ShapelessRecipes) recipe).recipeItems);
-
                 setObject("recipes/crafting/shapeless", globalID);
-                int n = 0;
-                for (Object ingredient : ((ShapelessRecipes) recipe).recipeItems) {
-                    put("ingredient." + n, toString(ingredient));
-                    ++n;
-                }
 
+                dumpIngredientList(((ShapelessRecipes) recipe).recipeItems);
+                put("output", toString(output));
+            } else if (recipe instanceof ShapelessOreRecipe) {
+                String globalID = getGlobalItemNamesSorted(((ShapelessOreRecipe) recipe).getInput());
+                setObject("recipes/crafting/shapeless", globalID);
+
+                dumpIngredientList(((ShapelessOreRecipe) recipe).getInput());
                 put("output", toString(output));
             }
             // TODO: more types
+        }
+    }
+
+    private void dumpIngredientList(List list) {
+        int n = 0;
+        for (Object ingredient : list) {
+            put("ingredient." + n, toString(ingredient));
+            ++n;
         }
     }
 
@@ -461,7 +481,17 @@ public class ModAnalyzer implements ITickHandler {
             return toString((ItemStack) object);
         } else if (object instanceof Material) {
             return toString((Material) object);
+        } else if (object instanceof List) {
+            StringBuffer sb = new StringBuffer();
+
+            for (Object element : (List) object) {
+                sb.append(toString(element));
+                sb.append(";");
+            }
+
+            return sb.toString();
         } else {
+            System.out.println("toString type"+object+" = "+object.getClass().getName());
             return ""+object;
         }
     }
