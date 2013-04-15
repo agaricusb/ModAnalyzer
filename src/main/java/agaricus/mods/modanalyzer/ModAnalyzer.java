@@ -329,6 +329,16 @@ public class ModAnalyzer implements ITickHandler {
         return Joiner.on(";").join(strings);
     }
 
+    public String getGlobalItemNames(ItemStack[] itemStacks) {
+        List<String> strings = new ArrayList<String>();
+
+        for (ItemStack itemStack : itemStacks) {
+            strings.add(getGlobalItemName(itemStack));
+        }
+
+        return Joiner.on(";").join(strings);
+    }
+
     private void dumpOreDict() {
         for (String oreName : OreDictionary.getOreNames()) {
             for (ItemStack oreItem : OreDictionary.getOres(oreName)) {
@@ -364,19 +374,9 @@ public class ModAnalyzer implements ITickHandler {
                 put("output", toString(output));
 
             } else if (recipe instanceof ShapedRecipes) {
-                StringBuilder sb = new StringBuilder();
-                ItemStack[] recipeItems = ((ShapedRecipes) recipe).recipeItems;
-
-                for (int i = 0; i < recipeItems.length; ++i) {
-                    sb.append(getGlobalItemName(recipeItems[i]));
-                    if (i % ((ShapedRecipes) recipe).recipeWidth == 0)  {
-                        sb.append("/");
-                    } else {
-                        sb.append(";");
-                    }
-                }
-
-                setObject("recipes/crafting/shaped", sb.toString());
+                int width = ((ShapedRecipes) recipe).recipeWidth;
+                String globalID = "W="+width+";"+getGlobalItemNames(((ShapedRecipes) recipe).recipeItems);
+                setObject("recipes/crafting/shaped", globalID);
 
                 put("output", toString(output));
             }
