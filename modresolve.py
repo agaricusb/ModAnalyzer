@@ -8,7 +8,7 @@ import re
 import modanalyzer
 import modlist
 
-CHECK_CONFLICT_KINDS = ("block", "item", "biome", "recipes/smelting")  # check for conflicts on these
+CHECK_CONFLICT_KINDS = ("block", "item", "biome", "recipes/smelting", "recipes/crafting/shapeless", "recipes/crafting/shaped")  # check for conflicts on these
 RESOLVE_CONFLICT_KINDS = ("block", "item", "biome")
 
 ID_RANGES = {
