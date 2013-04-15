@@ -26,11 +26,13 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.item.crafting.*;
 import net.minecraft.world.biome.BiomeGenBase;
 import net.minecraftforge.oredict.OreDictionary;
+import net.minecraftforge.oredict.ShapedOreRecipe;
 import net.minecraftforge.oredict.ShapelessOreRecipe;
 
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 import java.util.logging.Level;
 
@@ -379,7 +381,28 @@ public class ModAnalyzer implements ITickHandler {
                 setObject("recipes/crafting/shaped", globalID);
 
                 put("output", toString(output));
+            } else if (recipe instanceof ShapedOreRecipe) {
+                int width = (Integer)ReflectionHelper.getPrivateValue(ShapedOreRecipe.class, (ShapedOreRecipe) recipe, "width");
+
+                List<String> strings = new ArrayList<String>();
+                Object[] inputs = ((ShapedOreRecipe) recipe).getInput();
+                for (Object input : inputs) {
+                    // TODO: refactor
+                    if (input instanceof List) {
+                        strings.add(getGlobalItemNamesSorted((List) input));
+                    } else if (input instanceof ItemStack) {
+                        strings.add(getGlobalItemName((ItemStack) input));
+                    } else {
+                        strings.add(""+input);
+                    }
+                }
+
+                String globalID = "W="+width+";"+Joiner.on(';').join(strings);
+                setObject("recipes/crafting/shaped", globalID);
+
+                put("output", toString(output));
             }
+
             // TODO: more types
         }
     }
