@@ -426,7 +426,7 @@ def main():
 
             fn2depsfn[fn] = modid2fn[dep]
 
-        fn2depsfn[fn] = [modid2fn[dep] for dep in deps]
+        fn2depsfn[fn] = [modid2fn[dep] for dep in deps if modid2fn[dep] != fn]
 
 
     # setup analyzer
