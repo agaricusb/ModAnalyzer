@@ -4,6 +4,7 @@ import os
 import sys
 import pprint
 import re
+import glob
 
 import modanalyzer
 import modlist
@@ -43,7 +44,9 @@ def vanillaOverride(mods):
     return False
 
 """Get a list of edits of tuples (mod,kind,id,newId) to resolve ID conflicts of 'kind'."""
-def getConflictMappings(contents, kind, allSortedMods):
+def getConflictMappings(contents, kind, allSortedMods, preferredIDs):
+    # TODO: prefer preferredIDs
+
     slicedContent = modlist.sliceAcross(contents, kind)
 
     used = set(slicedContent.keys())
@@ -233,7 +236,41 @@ def sortAllMods(contents):
 
     return mods
 
+
+"""Load an NEI id dump into a mapping from unlocalized name to ID, blocks and items."""
+def parseNEIDump(fn):
+    m = {}
+    for line in file(fn).readlines():
+        line = line.replace("\n", "")
+
+        if line.startswith("Block. Name: ") or line.startswith("Item. Name: "):
+            kind, info = line.split(": ", 1)
+            unlocalizedName, id = info.split(". ID: ")
+            m[unlocalizedName] = int(id)
+
+    return m
+        
+
+"""Load an NEI dump in the current working directory."""
+def loadNEIDump():
+    found = glob.glob("IDMap dump*")
+    if len(found) == 0:
+        return {} # no preference
+    elif len(found) > 1:
+        print "Multiple NEI dumps found. Which one do you want?"
+        for i, f in enumerate(found):
+            print "%s. %s" % (i + 1, f)
+        print ">",
+        filename = found[int(raw_input()) - 1]
+    else:
+        filename = found[0]
+
+    return parseNEIDump(filename)
+
+
 def main():
+    preferredIDs = loadNEIDump()
+
     wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
 
     contents = modanalyzer.load()
@@ -242,7 +279,7 @@ def main():
 
     mappings = []
     for kind in CHECK_CONFLICT_KINDS:
-        mappings += getConflictMappings(contents, kind, allSortedMods)
+        mappings += getConflictMappings(contents, kind, allSortedMods, preferredIDs)
     pprint.pprint(mappings)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
