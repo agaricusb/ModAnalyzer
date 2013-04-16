@@ -43,20 +43,51 @@ def vanillaOverride(mods):
 
     return False
 
+"""Get the assigned ID from the resolution data structure (default if none is assigned)."""
+def getAssignedId(resolutions, mod, defaultId):
+    newId = resolutions[(mod, defaultId)]
+    if newId is None:
+        return defaultId
+    else:
+        return newId
+
+"""Get dictionary of id -> [list of mods], to detect conflicts (if list of mods > 1, of course)."""
+def getConflicts(resolutions):
+    sliced = {}
+    for mod, defaultId in resolutions:
+        if not sliced.has_key(defaultId):
+            sliced[defaultId] = []
+
+        sliced[defaultId].append(mod)
+
+    return sliced
+
 """Get a list of edits of tuples (mod,kind,id,newId) to resolve ID conflicts of 'kind'."""
-def getConflictMappings(contents, kind, allSortedMods, preferredIDs):
-    # TODO: prefer preferredIDs
+def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
 
-    slicedContent = modlist.sliceAcross(contents, kind)
+    # initialize 'resolutions' to (mod, defaultId) -> None (no change)
+    # -- this data structure is used to keep track of the assigned IDs being resolved
+    resolutions = {}
+    for mod, content in contents.iteritems():
+        for defaultId, data in content.get(kind, {}).iteritems():
+            resolutions[(mod, modlist.intIfInt(defaultId))] = None
 
-    used = set(slicedContent.keys())
-    mappings = []
+    #print "INITIAL RESOLUTIONS"
+    #pprint.pprint(resolutions)
 
-    for id, usingMods in slicedContent.iteritems():
+    # TODO: prefer preferredIDs, pre-populate resolutions
+
+    conflicts = getConflicts(resolutions)
+    #print "SLICED",
+    #pprint.pprint(conflicts)
+
+    used = set(conflicts.keys())
+
+    for id, usingMods in conflicts.iteritems():
         if kind == "item" and id < 4096: continue # skip item blocks - TODO: instead check data isItemBlock
 
         if len(usingMods) > 1:
-            sortedMods = usingMods.keys()
+            sortedMods = usingMods
             sortModsByPriority(sortedMods, allSortedMods)
 
             if vanillaOverride(sortedMods):
@@ -77,10 +108,14 @@ def getConflictMappings(contents, kind, allSortedMods, preferredIDs):
                 # TODO: bin packing algorithms, for multiple contiguous IDs - first, last, best, worst, almost worst fits
                 newId = findAvailable(used, kind, id)
                 used.add(newId)
-                mappings.append((conflictingMod.replace(".csv", ""), kind, id, newId))
+
+                key = (conflictingMod, id)
+                assert resolutions.has_key(key), "resolution missing key? %s" % (key,)
+                assert resolutions[key] is None, "attempted to resolve already-resolved? %s -> %s but already %s" % (key, resolutions[key], newId)
+                resolutions[key] = newId
                 print "\tmoving %s %s -> %s" % (conflictingMod, id, newId)
 
-    return mappings
+    return resolutions
 
 CONFIG_IGNORE = ["forge.cfg", "forgeChunkLoading.cfg"]  # TODO: exclude from deps in mod analysis
 
@@ -100,7 +135,7 @@ def getConfigFiles(mod):
     return configs
 
 """Install mod configuration. Returns any needed manual edits."""
-def installModConfigs(mod, modMappings):
+def installModConfigs(mod, modEdits):
     pendingEdits = []
 
     # read default configs
@@ -110,7 +145,7 @@ def installModConfigs(mod, modMappings):
         editingConfigs[targetPath] = data
 
     # apply edits
-    for mod, kind, oldId, newId in modMappings:
+    for mod, kind, oldId, newId in modEdits:
         success = False
         for targetPath, data in editingConfigs.iteritems():
             data, thisFailed = applyConfigEdit(data, kind, oldId, newId)
@@ -126,7 +161,7 @@ def installModConfigs(mod, modMappings):
     # write files
     needsMerge = False
     for targetPath, data in editingConfigs.iteritems():
-        print "Installing %s [%s]" % (targetPath, len(modMappings))
+        print "Installing %s [%s]" % (targetPath, len(modEdits))
         modanalyzer.mkdirContaining(targetPath)
 
         if os.path.exists(targetPath):
@@ -135,7 +170,7 @@ def installModConfigs(mod, modMappings):
             data = readme + data
 
             needsMerge = True
-            pendingEdits += modMappings # probably everything, to be safe
+            pendingEdits += modEdits # probably everything, to be safe
             # TODO: try to merge automatically?
 
         file(targetPath, "a").write(data)
@@ -277,10 +312,11 @@ def main():
 
     allSortedMods = sortAllMods(contents)
 
-    mappings = []
+    resolutionsByKind = {}
     for kind in CHECK_CONFLICT_KINDS:
-        mappings += getConflictMappings(contents, kind, allSortedMods, preferredIDs)
-    pprint.pprint(mappings)
+        resolutionsByKind[kind] = getConflictResolutions(contents, kind, allSortedMods, preferredIDs)
+    #print "FINAL RES",
+    #pprint.pprint(resolutionsByKind)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
 
@@ -293,9 +329,15 @@ def main():
         print "Installing",mod
         modanalyzer.installMod(mod, modsFolder, coremodsFolder)
 
-        modMappings = filter(lambda m: m[0] == os.path.basename(mod), mappings)
+        # extract the resolutions we care about, for editing the config
+        modEdits = []
+        for kind, resolutions in resolutionsByKind.iteritems():
+            for (thisMod, defaultId), assignedId in resolutions.iteritems():
+                if os.path.basename(mod)+".csv" == thisMod and assignedId is not None:
+                    modEdits.append((mod, kind, defaultId, assignedId))
+        #print "MODEDITS=",modEdits 
 
-        pendingEdits = installModConfigs(mod, modMappings)
+        pendingEdits = installModConfigs(mod, modEdits)
         if len(pendingEdits) > 0:
             requiresManual[mod] = pendingEdits
 
