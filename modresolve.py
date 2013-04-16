@@ -118,8 +118,6 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
     used = set(conflicts.keys())
 
     for id, usingMods in conflicts.iteritems():
-        if kind == "item" and id < 4096: continue # skip item blocks - TODO: instead check data isItemBlock
-
         if len(usingMods) > 1:
             # sort by priority, highest mods last
             sortedMods = usingMods
@@ -196,15 +194,18 @@ def installModConfigs(mod, modEdits):
     # apply edits
     for mod, kind, oldId, newId in modEdits:
         success = False
-        #print "EDITING",mod,kind,oldId,newId
+        print "EDITING",mod,kind,oldId,newId
         for targetPath, data in editingConfigs.iteritems():
+            print " TRYING",targetPath
             data, thisFailed = applyConfigEdit(mod, data, kind, oldId, newId)
+            print " RETURNED",thisFailed
             editingConfigs[targetPath] = data
             if not thisFailed: 
                 success = True
                 break
 
         if not success:
+            print "MANUAL EDIT",mod,kind,oldId,newId
             pendingEdits.append((mod, kind, oldId, newId))
 
 
@@ -237,6 +238,8 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
             # most mods use shifted IDs
             oldId -= 256
             newId -= 256
+            print "SHIFT"
+    print "EDITING ACTUAL",oldId,newId
 
     # id kinds which might collide with other kinds, restrict ourselves to Forge sections
     mustMatchSection = kind in ("biome")
@@ -249,8 +252,10 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
         line = line.replace("\n", "")
         if line.startswith("%s {" % (kind,)):
             section = kind
-
+    
+        print "LINE",line
         if line.endswith("=%s" % (oldId)):
+            print " MATCH"
             replacement = re.sub(r"\d+$", str(newId), line)
             assert replacement != line, "Failed to replace matched config line %s for %s -> %s" % (line, oldId, newId)
 
@@ -353,6 +358,26 @@ def loadNEIDump():
 
     return parseNEIDump(filename)
 
+def filterItemBlocks(contents):
+    newContents = {}
+
+    for mod, content in contents.iteritems():
+        newContent = {}
+        for kind, datas in content.iteritems():
+            newDatas = {}
+            for defaultId, data in datas.iteritems():
+                skip = False
+                if data.get("isItemBlock", "false") == "true":
+                    skip = True # skip itemblocks (items) - because they're handled as blocks
+        
+                if not skip:
+                    newDatas[defaultId] = data
+
+            newContent[kind] = newDatas
+        newContents[mod] = newContent
+
+    return newContents
+ 
 
 def main():
     preferredIDs = loadNEIDump()
@@ -360,6 +385,7 @@ def main():
     wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
 
     contents = modanalyzer.load()
+    contents = filterItemBlocks(contents)
 
     allSortedMods = sortAllMods(contents)
 
