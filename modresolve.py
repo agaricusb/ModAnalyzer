@@ -68,14 +68,38 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
     # initialize 'resolutions' to (mod, defaultId) -> None (no change)
     # -- this data structure is used to keep track of the assigned IDs being resolved
     resolutions = {}
+    unlocalizedName2ID = {}
     for mod, content in contents.iteritems():
         for defaultId, data in content.get(kind, {}).iteritems():
             resolutions[(mod, modlist.intIfInt(defaultId))] = None
 
+            # also save unlocalized name lookup table, for NEI loading
+            if data.has_key("unlocalizedName"):
+                name = data["unlocalizedName"]
+                if name in ("tile.null", "item.null"): continue # useless
+
+                if unlocalizedName2ID.has_key(name):
+                    name += "#" + defaultId  # ambiguous, mostly useless
+                unlocalizedName2ID[name] = (mod, defaultId) 
+
+    #print "unlocalizedName2ID"
+    #pprint.pprint(unlocalizedName2ID)
+
     #print "INITIAL RESOLUTIONS"
     #pprint.pprint(resolutions)
 
-    # TODO: prefer preferredIDs, pre-populate resolutions
+    # Load preferred IDs from NEI dump, pre-populating resolutions
+    for name, newId in preferredIDs.iteritems():
+        m = unlocalizedName2ID.get(name)
+        if m is not None:  # can't match everything
+            mod, defaultId = m
+            if mod.startswith("Minecraft-"): continue # vanilla, uninteresting
+            print "Matched preferred ID:",name,"is",(mod, defaultId),"->",newId
+
+
+            resolutions[(mod, defaultId)] = newId
+
+    raise SystemExit
 
     conflicts = getConflicts(resolutions)
     #print "SLICED",
