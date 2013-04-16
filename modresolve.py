@@ -196,11 +196,12 @@ def installModConfigs(mod, modEdits):
         success = False
         print "EDITING",mod,kind,oldId,newId
         for targetPath, data in editingConfigs.iteritems():
-            print " TRYING",targetPath
+            print " TRYING",targetPath,mod,kind,oldId,newId
             data, thisFailed = applyConfigEdit(mod, data, kind, oldId, newId)
-            print " RETURNED",thisFailed
+            print " RETURNED",thisFailed,mod,kind,oldId,newId
             editingConfigs[targetPath] = data
             if not thisFailed: 
+                print "  AND SUCCESS!",mod,kind,oldId,newId
                 success = True
                 break
 
@@ -250,6 +251,8 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
     comments = []
     for i, line in enumerate(lines):
         line = line.replace("\n", "")
+        if line.startswith("#"): continue # skip comments
+
         if line.startswith("%s {" % (kind,)):
             section = kind
     
