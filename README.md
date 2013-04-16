@@ -15,7 +15,8 @@ Usage:
 
 1. download a ton of mods, and place them in the "allmods" folder
 2. run modanalyze.py and it should setup a test server and analyze each mod, placing gathered results in "data" and "configs"
-3. run modresolve.py to configure a test server with all the mods installed in "temp-server"
+3. (optional) to use existing IDs, save an NEI dump (Not Enough Items > Options > Block/Item ID Settings > Dump ID Map Now) in the root directory
+4. run modresolve.py to configure a test server with all the mods installed in "temp-server"
 
 Conflict resolution is not 100%, since some mods configuration is not easily programmatically configurable (or at all).
 
