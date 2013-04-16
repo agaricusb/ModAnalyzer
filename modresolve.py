@@ -192,17 +192,26 @@ def installModConfigs(mod, modEdits):
         editingConfigs[targetPath] = data
 
     # apply edits
+    alreadyEditedLines = {}
     for mod, kind, oldId, newId in modEdits:
         success = False
         print "EDITING",mod,kind,oldId,newId
         for targetPath, data in editingConfigs.iteritems():
             print " TRYING",targetPath,mod,kind,oldId,newId
-            data, thisFailed = applyConfigEdit(mod, data, kind, oldId, newId)
+            print "ALREADYEDIT",alreadyEditedLines
+            data, thisFailed, editedLineText = applyConfigEdit(mod, data, kind, oldId, newId, excludeLineTexts=alreadyEditedLines.get(targetPath, set()))
+
             print " RETURNED",thisFailed,mod,kind,oldId,newId
             editingConfigs[targetPath] = data
             if not thisFailed: 
                 print "  AND SUCCESS!",mod,kind,oldId,newId
                 success = True
+
+                # record this line as 'we edited it', so we don't edit it again
+                if not alreadyEditedLines.has_key(targetPath):
+                    alreadyEditedLines[targetPath] = set()
+                alreadyEditedLines[targetPath].add(editedLineText)
+
                 break
 
         if not success:
@@ -230,9 +239,10 @@ def installModConfigs(mod, modEdits):
     return pendingEdits
    
 """Change given ID in read config file data, or add comments for the user to do it if it cannot be automated."""
-def applyConfigEdit(mod, data, kind, oldId, newId):
+def applyConfigEdit(mod, data, kind, oldId, newId, excludeLineTexts):
     section = None
     requiresManual = False
+    editedLineText = None
 
     if kind == "item":
         if not mcmodfixes.usesUnshiftedItemIDs(mod):
@@ -252,6 +262,9 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
     for i, line in enumerate(lines):
         line = line.replace("\n", "")
         if line.startswith("#"): continue # skip comments
+        if line in excludeLineTexts: 
+            print "XSKIP",line
+            continue # skip lines we ourselves added (avoid transitive edits)
 
         if line.startswith("%s {" % (kind,)):
             section = kind
@@ -276,6 +289,7 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
         # just one hit, we know what to do
         n = hits.keys()[0]
         lines[n] = hits[n]["new"]
+        editedLineText = lines[n]
         comments.append("# Changed %s: %s -> %s" % (kind, hits[n]["old"], hits[n]["new"]))
     else:
         # ambiguous..
@@ -285,7 +299,7 @@ def applyConfigEdit(mod, data, kind, oldId, newId):
         requiresManual = True
 
     data = "\n".join(lines + comments)
-    return data, requiresManual
+    return data, requiresManual, editedLineText
 
 """Get an estimate of the relative amount of the content in a mod."""
 def getModGirth(contents, mod):
