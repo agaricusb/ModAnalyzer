@@ -195,16 +195,11 @@ def installModConfigs(mod, modEdits):
     alreadyEditedLines = {}
     for mod, kind, oldId, newId in modEdits:
         success = False
-        print "EDITING",mod,kind,oldId,newId
         for targetPath, data in editingConfigs.iteritems():
-            print " TRYING",targetPath,mod,kind,oldId,newId
-            print "ALREADYEDIT",alreadyEditedLines
             data, thisFailed, editedLineText = applyConfigEdit(mod, data, kind, oldId, newId, excludeLineTexts=alreadyEditedLines.get(targetPath, set()))
 
-            print " RETURNED",thisFailed,mod,kind,oldId,newId
             editingConfigs[targetPath] = data
             if not thisFailed: 
-                print "  AND SUCCESS!",mod,kind,oldId,newId
                 success = True
 
                 # record this line as 'we edited it', so we don't edit it again
@@ -215,7 +210,7 @@ def installModConfigs(mod, modEdits):
                 break
 
         if not success:
-            print "MANUAL EDIT",mod,kind,oldId,newId
+            #print "MANUAL EDIT",mod,kind,oldId,newId
             pendingEdits.append((mod, kind, oldId, newId))
 
 
@@ -249,8 +244,6 @@ def applyConfigEdit(mod, data, kind, oldId, newId, excludeLineTexts):
             # most mods use shifted IDs
             oldId -= 256
             newId -= 256
-            print "SHIFT"
-    print "EDITING ACTUAL",oldId,newId
 
     # id kinds which might collide with other kinds, restrict ourselves to Forge sections
     mustMatchSection = kind in ("biome")
@@ -263,15 +256,12 @@ def applyConfigEdit(mod, data, kind, oldId, newId, excludeLineTexts):
         line = line.replace("\n", "")
         if line.startswith("#"): continue # skip comments
         if line in excludeLineTexts: 
-            print "XSKIP",line
             continue # skip lines we ourselves added (avoid transitive edits)
 
         if line.startswith("%s {" % (kind,)):
             section = kind
     
-        print "LINE",line
         if line.endswith("=%s" % (oldId)):
-            print " MATCH"
             replacement = re.sub(r"\d+$", str(newId), line)
             assert replacement != line, "Failed to replace matched config line %s for %s -> %s" % (line, oldId, newId)
 
