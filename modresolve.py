@@ -33,12 +33,12 @@ def sortModsByPriority(mods, allSortedMods):
         if m.startswith("Minecraft"): return -1
         return allSortedMods.index(modanalyzer.getModName(m.replace(".csv", "")))
 
-    mods.sort(cmp=lambda a, b: cmp(getPriority(b), getPriority(a)))
+    mods.sort(cmp=lambda a, b: cmp(getPriority(b[0]), getPriority(a[0])))
 
 """Get whether this mod list contains a vanilla override, which should not be resolved."""
 def vanillaOverride(mods):
     for m in mods:
-        if m.startswith("Minecraft"):
+        if m[0].startswith("Minecraft"):
             return True
 
     return False
@@ -51,14 +51,16 @@ def getAssignedId(resolutions, mod, defaultId):
     else:
         return newId
 
-"""Get dictionary of id -> [list of mods], to detect conflicts (if list of mods > 1, of course)."""
+"""Get dictionary of id -> [list of (mods, defaultId)], to detect conflicts (if list of mods > 1, of course)."""
 def getConflicts(resolutions):
     sliced = {}
     for mod, defaultId in resolutions:
-        if not sliced.has_key(defaultId):
-            sliced[defaultId] = []
+        assignedId = getAssignedId(resolutions, mod, defaultId)
 
-        sliced[defaultId].append(mod)
+        if not sliced.has_key(assignedId):
+            sliced[assignedId] = []
+
+        sliced[assignedId].append((mod, defaultId))
 
     return sliced
 
@@ -76,6 +78,7 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
             # also save unlocalized name lookup table, for NEI loading
             if data.has_key("unlocalizedName"):
                 name = data["unlocalizedName"]
+
                 if name in ("tile.null", "item.null"): continue # useless
 
                 if unlocalizedName2ID.has_key(name):
@@ -91,19 +94,25 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
     # Load preferred IDs from NEI dump, pre-populating resolutions
     for name, newId in preferredIDs.iteritems():
         m = unlocalizedName2ID.get(name)
+        if m is None: m = unlocalizedName2ID.get(name.replace("tile.","")) # sometimes finds more.. (IC2)
+        if m is None: m = unlocalizedName2ID.get(name.replace("item.",""))
+
         if m is not None:  # can't match everything
             mod, defaultId = m
+            defaultId = modlist.intIfInt(defaultId)
             if mod.startswith("Minecraft-"): continue # vanilla, uninteresting
             print "Matched preferred ID:",name,"is",(mod, defaultId),"->",newId
 
+            assert resolutions[(mod, defaultId)] is None, "attempted to load preferred ID for %s,%s -> %s but already %s?" % (mod, defaultId, newId, resolutions[(mod, defaultId)])
 
             resolutions[(mod, defaultId)] = newId
 
-    raise SystemExit
+    #print "PRE-POPULATED RESOLUTIONS"
+    #pprint.pprint(resolutions)
 
     conflicts = getConflicts(resolutions)
-    #print "SLICED",
-    #pprint.pprint(conflicts)
+    print "SLICED",
+    pprint.pprint(conflicts)
 
     used = set(conflicts.keys())
 
@@ -111,6 +120,7 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
         if kind == "item" and id < 4096: continue # skip item blocks - TODO: instead check data isItemBlock
 
         if len(usingMods) > 1:
+            # sort by priority, highest mods last
             sortedMods = usingMods
             sortModsByPriority(sortedMods, allSortedMods)
 
@@ -118,6 +128,20 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
                 continue
 
             print "Conflict on %s at %s" % (kind, id)
+
+            # move already-resolved IDs to front of the queue, cut in line, ultimate highest priority
+            alreadyAssigned = []
+            for conflictingMod in sortedMods:
+                if resolutions[conflictingMod] is not None:
+                    alreadyAssigned.append(conflictingMod)
+            assert len(alreadyAssigned) <= 1, "multiple IDs already resolved to same ID? %s on id %s" % (alreadyAssigned, id)
+
+            if len(alreadyAssigned) > 0:
+                priorityMod = alreadyAssigned.pop()
+                print "\t(using preference %s)" % (priorityMod,)
+                del sortedMods[sortedMods.index(priorityMod)]
+                sortedMods.append(priorityMod)  # last = highest
+
             print "\tkeeping %s %s:%s" % (sortedMods.pop(), kind, id)  # it gets the ID
 
             if kind not in RESOLVE_CONFLICT_KINDS:
@@ -133,7 +157,7 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
                 newId = findAvailable(used, kind, id)
                 used.add(newId)
 
-                key = (conflictingMod, id)
+                key = conflictingMod
                 assert resolutions.has_key(key), "resolution missing key? %s" % (key,)
                 assert resolutions[key] is None, "attempted to resolve already-resolved? %s -> %s but already %s" % (key, resolutions[key], newId)
                 resolutions[key] = newId
