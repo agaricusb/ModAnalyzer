@@ -8,6 +8,7 @@ import glob
 
 import modanalyzer
 import modlist
+import mcmodfixes
 
 CHECK_CONFLICT_KINDS = ("block", "item", "biome", "recipes/smelting", "recipes/crafting/shapeless", "recipes/crafting/shaped")  # check for conflicts on these
 RESOLVE_CONFLICT_KINDS = ("block", "item", "biome")
@@ -195,8 +196,9 @@ def installModConfigs(mod, modEdits):
     # apply edits
     for mod, kind, oldId, newId in modEdits:
         success = False
+        #print "EDITING",mod,kind,oldId,newId
         for targetPath, data in editingConfigs.iteritems():
-            data, thisFailed = applyConfigEdit(data, kind, oldId, newId)
+            data, thisFailed = applyConfigEdit(mod, data, kind, oldId, newId)
             editingConfigs[targetPath] = data
             if not thisFailed: 
                 success = True
@@ -226,14 +228,15 @@ def installModConfigs(mod, modEdits):
     return pendingEdits
    
 """Change given ID in read config file data, or add comments for the user to do it if it cannot be automated."""
-def applyConfigEdit(data, kind, oldId, newId):
+def applyConfigEdit(mod, data, kind, oldId, newId):
     section = None
     requiresManual = False
 
     if kind == "item":
-        # ugh - shifted IDs. TODO: support immibis' and Briman's unshifted IDs
-        oldId -= 256
-        newId -= 256
+        if not mcmodfixes.usesUnshiftedItemIDs(mod):
+            # most mods use shifted IDs
+            oldId -= 256
+            newId -= 256
 
     # id kinds which might collide with other kinds, restrict ourselves to Forge sections
     mustMatchSection = kind in ("biome")

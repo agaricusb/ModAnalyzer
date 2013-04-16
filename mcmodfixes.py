@@ -63,6 +63,10 @@ REQUIRES_EXTRACTION = {
     "BetterDungeons": "mods", # but also requires extra files .minecraft..
     }
 
+USES_UNSHIFTED_ITEM_IDS = [
+    "immibis-*",
+    ]
+
 def getExtraDeps(mod):
     for k, v in DEP_ADDITIONS.iteritems():
         if mod.startswith(k):
@@ -99,4 +103,10 @@ def getInstructionFolder(fn):
             return v
     return None
 
-    
+
+def usesUnshiftedItemIDs(fn):
+    for k in USES_UNSHIFTED_ITEM_IDS:
+        if fn.startswith(k):
+            return True
+    return False
+
