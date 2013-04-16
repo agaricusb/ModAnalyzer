@@ -111,8 +111,8 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
     #pprint.pprint(resolutions)
 
     conflicts = getConflicts(resolutions)
-    print "SLICED",
-    pprint.pprint(conflicts)
+    #print "SLICED",
+    #pprint.pprint(conflicts)
 
     used = set(conflicts.keys())
 
@@ -381,8 +381,9 @@ def main():
         modEdits = []
         for kind, resolutions in resolutionsByKind.iteritems():
             for (thisMod, defaultId), assignedId in resolutions.iteritems():
-                if os.path.basename(mod)+".csv" == thisMod and assignedId is not None:
-                    modEdits.append((mod, kind, defaultId, assignedId))
+                if os.path.basename(mod)+".csv" == thisMod:
+                    if assignedId is not None and assignedId != defaultId: # only if changed
+                        modEdits.append((mod, kind, defaultId, assignedId))
         #print "MODEDITS=",modEdits 
 
         pendingEdits = installModConfigs(mod, modEdits)
