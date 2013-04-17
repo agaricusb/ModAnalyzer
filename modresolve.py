@@ -17,7 +17,7 @@ WANTED_MODS_FILENAME = "include.txt"
 
 ID_RANGES = {
     "block": range(500, 4096),  # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
-    "blocktg": range(0, 256),   # terrain generation blocks
+    "blocktg": range(1, 256),   # terrain generation blocks
     "item": range(5000, 32000),
     "biome": range(0, 256),
     }
@@ -414,24 +414,23 @@ def getWantedMods():
 def main():
     preferredIDs = loadNEIDump()
 
-    wantedMods = getWantedMods()
-
     contents = modanalyzer.load()
     contents = filterItemBlocks(contents)
 
-    allSortedMods = sortAllMods(contents)
-    sortedMods = [x for x in allSortedMods if x in wantedMods]
+    wantedMods = getWantedMods()
+    sortedMods = [x for x in sortAllMods(contents) if x in wantedMods]
 
     resolutionsByKind = {}
+    vanilla = "Minecraft-" + modanalyzer.MC_VERSION
     for kind in CHECK_CONFLICT_KINDS:
-        resolutionsByKind[kind] = getConflictResolutions(contents, kind, sortedMods, preferredIDs)
+        resolutionsByKind[kind] = getConflictResolutions(contents, kind, sortedMods+[vanilla], preferredIDs)
     #print "FINAL RES",
     #pprint.pprint(resolutionsByKind)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
 
     requiresManual = {}
-    for modName in wantedMods:
+    for modName in sortedMods:
         mod = os.path.join(modanalyzer.ALL_MODS_DIR, modName)
 
         if not contents.has_key(os.path.basename(mod)+".csv"):
