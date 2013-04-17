@@ -12,3 +12,4 @@ data
 configs
 allmods
 *.pyc
+*.txt
