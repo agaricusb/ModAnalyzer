@@ -352,15 +352,8 @@ def getModAnalysis(mod):
         print "Reusing cached",getModName(mod)
         return file(infoFile).readlines()
 
+    # analyze dependencies first, recursively if needed
     deps = getRecursiveDepsFilenames(mod)
-
-    analyzeMod(mod, deps)
-
-    # grab the content
-    unfilteredInfo = readModInfo()
-
-    # filter through dependencies, analyzing recursively if needed
-    depsAnalyzed = []
 
     # everything depends on vanilla ("None"), except vanilla
     if mod is not None:
@@ -368,9 +361,15 @@ def getModAnalysis(mod):
     else:
         allDeps = deps
 
+    depsAnalyzed = []
     for dep in allDeps:
         depsAnalyzed.append(getModAnalysis(dep))
 
+    # grab the content
+    analyzeMod(mod, deps)
+    unfilteredInfo = readModInfo()
+
+    # save filter through dependencies
     info = saveModInfo(mod, unfilteredInfo, depsAnalyzed, allDeps)
 
 
