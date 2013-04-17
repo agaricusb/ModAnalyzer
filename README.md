@@ -15,8 +15,7 @@ Usage:
 
 1. download a ton of mods, and place them in the "allmods" folder
 2. run modanalyze.py and it should setup a test server and analyze each mod, placing gathered results in "data" and "configs"
-3. (optional) to use existing IDs, save an NEI dump (Not Enough Items > Options > Block/Item ID Settings > Dump ID Map Now) in the root directory
-4. run modresolve.py to configure a test server with all the mods installed in "temp-server"
+3. run modresolve.py to configure a test server with all the mods installed in "temp-server"
 
 Conflict resolution is not 100%, since some mods configuration is not easily programmatically configurable (or at all).
 
@@ -26,6 +25,13 @@ to your real server, make the edits, then copy the same contents to the client, 
 If there are too many irresolvable conflicts, you can edit "priority.txt" and reorder the mods, higher first,
 to take precedence when choosing which mod to move. By default, mods with more content will have higher priority.
 Note that re-running modresolve.py will erase the mods and configs in "temp-server", regenerating from scratch.
+
+To use only a subset of mods in your allmods folder, edit "include.txt". This file is generated on first run of modresolve,
+including all mods by default, but you can change it to include only the mods you want, as an alternative to
+deleting mods from allmods.
+
+To use preferred block and item IDs from another installation, save an NEI dump (Not Enough Items > Options > 
+Block/Item ID Settings > Dump ID Map Now) in the root directory before running modresolve.
 
 Examples:
 

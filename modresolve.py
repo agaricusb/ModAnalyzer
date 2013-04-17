@@ -13,6 +13,8 @@ import mcmodfixes
 CHECK_CONFLICT_KINDS = ("block", "item", "biome", "recipes/smelting", "recipes/crafting/shapeless", "recipes/crafting/shaped")  # check for conflicts on these
 RESOLVE_CONFLICT_KINDS = ("block", "item", "biome")
 
+WANTED_MODS_FILENAME = "include.txt"
+
 ID_RANGES = {
     "block": range(500, 4096),  # >256 for future vanilla block expansion, >408 for future itemblocks -- maximum, 12-bit
     "blocktg": range(0, 256),   # terrain generation blocks
@@ -384,12 +386,34 @@ def filterItemBlocks(contents):
         newContents[mod] = newContent
 
     return newContents
- 
+
+"""Get list of paths of all mods to include."""
+def getWantedMods():
+    everything = os.listdir(modanalyzer.ALL_MODS_DIR)
+
+    tag = "# Remove this line to edit your desired mod selection list below\n"
+    if os.path.exists(WANTED_MODS_FILENAME) and not file(WANTED_MODS_FILENAME).read().startswith(tag[:-1]):
+        # user-selected list found, and edited, use it
+        wanted = [line.strip() for line in file(WANTED_MODS_FILENAME).readlines()]
+        wanted = [want for want in wanted if not want.startswith("#")]
+        print "Using wanted list",WANTED_MODS_FILENAME
+    else:
+        # assume wants everything, but write out list for customizing mod selection on subsequent runs
+        wanted = sorted(everything)
+        f = file(WANTED_MODS_FILENAME, "wt")
+        f.write(tag)
+        for w in wanted:
+            f.write(w + "\n")
+        f.close()
+        print "Wrote wanted list",WANTED_MODS_FILENAME
+
+    return [os.path.join(modanalyzer.ALL_MODS_DIR, x) for x in wanted]
+
 
 def main():
     preferredIDs = loadNEIDump()
 
-    wantedMods = map(lambda x: os.path.join(modanalyzer.ALL_MODS_DIR, x), os.listdir(modanalyzer.ALL_MODS_DIR))
+    wantedMods = getWantedMods()
 
     contents = modanalyzer.load()
     contents = filterItemBlocks(contents)
