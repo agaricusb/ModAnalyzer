@@ -31,10 +31,10 @@ def findAvailable(used, kind, current):
     print used
     assert False, "all %s are used!" % (kind,)        # if you manage to max out the blocks in legitimate usage, I'd be very interested in your mod collection
 
-def sortModsByPriority(mods, allSortedMods):
+def sortModsByPriority(mods, sortedMods):
     def getPriority(m):
         if m.startswith("Minecraft"): return -1
-        return allSortedMods.index(modanalyzer.getModName(m.replace(".csv", "")))
+        return sortedMods.index(modanalyzer.getModName(m.replace(".csv", "")))
 
     mods.sort(cmp=lambda a, b: cmp(getPriority(b[0]), getPriority(a[0])))
 
@@ -75,6 +75,7 @@ def getConflictResolutions(contents, kind, allSortedMods, preferredIDs):
     resolutions = {}
     unlocalizedName2ID = {}
     for mod, content in contents.iteritems():
+        if mod.replace(".csv","") not in allSortedMods: continue
         for defaultId, data in content.get(kind, {}).iteritems():
             resolutions[(mod, modlist.intIfInt(defaultId))] = None
 
@@ -387,7 +388,7 @@ def filterItemBlocks(contents):
 
     return newContents
 
-"""Get list of paths of all mods to include."""
+"""Get list of all mods to include."""
 def getWantedMods():
     everything = os.listdir(modanalyzer.ALL_MODS_DIR)
 
@@ -407,7 +408,7 @@ def getWantedMods():
         f.close()
         print "Wrote wanted list",WANTED_MODS_FILENAME
 
-    return [os.path.join(modanalyzer.ALL_MODS_DIR, x) for x in wanted]
+    return wanted
 
 
 def main():
@@ -419,17 +420,20 @@ def main():
     contents = filterItemBlocks(contents)
 
     allSortedMods = sortAllMods(contents)
+    sortedMods = [x for x in allSortedMods if x in wantedMods]
 
     resolutionsByKind = {}
     for kind in CHECK_CONFLICT_KINDS:
-        resolutionsByKind[kind] = getConflictResolutions(contents, kind, allSortedMods, preferredIDs)
+        resolutionsByKind[kind] = getConflictResolutions(contents, kind, sortedMods, preferredIDs)
     #print "FINAL RES",
     #pprint.pprint(resolutionsByKind)
 
     modsFolder, coremodsFolder, configFolder = modanalyzer.prepareCleanServerFolders(modanalyzer.TEST_SERVER_ROOT)
 
     requiresManual = {}
-    for mod in wantedMods:
+    for modName in wantedMods:
+        mod = os.path.join(modanalyzer.ALL_MODS_DIR, modName)
+
         if not contents.has_key(os.path.basename(mod)+".csv"):
             print "No mod analysis found for %s, please analyze" % (mod,)
             sys.exit(-1)
