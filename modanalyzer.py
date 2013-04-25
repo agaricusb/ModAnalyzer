@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 MC_VERSION = "1.5.1"
-FORGE_VERSION = "7.7.1.667"
+FORGE_VERSION = "7.7.1.674"
 
 TEST_SERVER_ROOT = "temp-server"
 TEST_SERVER_FILE = "minecraft_server+forge.jar"
