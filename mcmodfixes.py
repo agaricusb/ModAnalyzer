@@ -33,6 +33,7 @@ DEP_ADDITIONS = {
     "TrailMix": ["iChunUtil"],
     "MPSA": ["mmmPowersuits"],
     "ThermalExpansion": ["CoFHCore"],
+    "OmniTools": ["CoFHCore"],
     "ElectricExpansion": ["BasicComponents"],
     "OpenCCSensors": ["ComputerCraft"],
     "Translocator": ["CodeChickenCore"],
@@ -40,6 +41,7 @@ DEP_ADDITIONS = {
     "chargepads": ["NotEnoughItems"],
     "MekanismGenerators": ["Mekanism"],
     "MekanismTools": ["Mekanism"],
+    "thaumicbees": ["Forestry"],
     }
 
 MOD_IDS = {
