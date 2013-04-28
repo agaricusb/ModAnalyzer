@@ -31,6 +31,7 @@ DEP_ADDITIONS = {
     "ChickenChunks": ["CodeChickenCore"],
     "EnderStorage": ["CodeChickenCore"],
     "TrailMix": ["iChunUtil"],
+    "Torched": ["iChunUtil"],
     "MPSA": ["mmmPowersuits"],
     "ThermalExpansion": ["CoFHCore"],
     "OmniTools": ["CoFHCore"],
