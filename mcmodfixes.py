@@ -43,6 +43,7 @@ DEP_ADDITIONS = {
     "MekanismGenerators": ["Mekanism"],
     "MekanismTools": ["Mekanism"],
     "thaumicbees": ["Forestry"],
+    "Galacticraft": ["IC2"], # requires IC2, UE, or TE - picked one: <strong><h1>Galacticraft Requires Basic Components, IndustrialCraft 2, or Thermal Expansion!</h1></strong><br /><h3>You can enable Basic Components loader in the Galacticraft config or install IndustrialCraft 2/Thermal Expansion manually</h3>
     }
 
 MOD_IDS = {
