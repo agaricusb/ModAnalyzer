@@ -67,6 +67,7 @@ REQUIRES_EXTRACTION = {
     "Ruins": "mods",
     #"RopePlus": "mods", # not
     "BetterDungeons": "mods", # but also requires extra files .minecraft..
+    "Dynmap": "mods",
     }
 
 USES_UNSHIFTED_ITEM_IDS = [
