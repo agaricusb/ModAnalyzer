@@ -16,10 +16,12 @@ DEP_BLACKLIST = set((
     "EurysCore", # replaced by SlimevoidLib?
     "Modular Powersuits", # mmmPowersuits
     "mod_NotEnoughItems", # chargepads
+    "mod_IC2", # MFFS
     ))
 
 
 DEP_ADDITIONS = {
+    "MFFS": ["IC2"],
     "gregtech": ["IC2"],
     "dimensional-anchor": ["IC2"],
     "MineFactoryReloaded": ["PowerCrystalsCore"],
