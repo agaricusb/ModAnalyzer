@@ -12,7 +12,7 @@ ALL_MODS_DIR = "allmods"
 DATA_DIR = "data"
 CONFIGS_DIR = "configs"
 
-import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types, pprint, sys
+import os, urllib, zipfile, urllib2, tempfile, shutil, json, hashlib, types, pprint, sys, re
 
 import mcmodfixes
 
@@ -204,7 +204,11 @@ def getModVersion(fn, info):
         return down["version"]
 
     # no such luck with mcmod.. try to infer from filename
-    return "UNKNOWN" # TODO
+    m = re.match(r".*?([\d.]+)", fn)
+    if m:
+        return m.group(1)
+
+    return "UNKNOWN" # sorry :(
 
 def readMcmodInfo(fn):
     if not fn.endswith(".jar") and not fn.endswith(".zip"): print "WARNING: non-zip/jar mod in",fn
