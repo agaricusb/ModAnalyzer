@@ -14,6 +14,7 @@ import modanalyzer
 
 def compareName2ModID(name, modid):
     if name.lower() == modid.lower(): return True
+    if name.lower() == modid.lower().replace("mod_", ""): return True
 
     return False
 
