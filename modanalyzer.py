@@ -226,7 +226,7 @@ def readMcmodInfo(fn):
 
         if "META-INF/MANIFEST.MF" in modZip.namelist():
             isCoremod = "FMLCorePlugin" in modZip.read("META-INF/MANIFEST.MF")
-            if isCoremod: print "Found coremod:",fn
+            #if isCoremod: print "Found coremod:",fn
         else:
             isCoremod = False
 
