@@ -192,12 +192,19 @@ def uniquelyRenameMod(fn):
 """Get version of mod."""
 def getModVersion(fn, info):
     assert info.has_key("info"), "Unable to read mcmod.info for: %s" % (fn,)
-    assert type(info["info"]) == types.ListType, "No mcmod.info entries for: %s" % (fn,)
-    assert len(info["info"]) == 1, "Not exactly one mcmod.info entry in: %s" % (fn,)
-    assert info["info"][0].has_key("version"), "No version property in mcmod.info for" % (fn,)
-    # TODO: pull from filename if no version?
+    if type(info["info"]) == types.ListType and len(info["info"]) >= 1:
+        #assert len(info["info"]) == 1, "Not exactly one mcmod.info entry in: %s" % (fn,) # TODO
+        down = info["info"][0] # assume first
+    elif type(info["info"]) == types.DictType:
+        down = info["info"]
+    else:
+        down = None
 
-    return info["info"][0]["version"]
+    if down is not None and down.has_key("version"):
+        return down["version"]
+
+    # no such luck with mcmod.. try to infer from filename
+    return "UNKNOWN" # TODO
 
 def readMcmodInfo(fn):
     if not fn.endswith(".jar") and not fn.endswith(".zip"): print "WARNING: non-zip/jar mod in",fn
