@@ -183,7 +183,7 @@ def getMods():
 def uniquelyRenameMod(fn):
     print "Getting unique filename for",fn
     info = readMcmodInfo(os.path.join(ALL_MODS_DIR, fn))
-    version = readMcmodVersion(fn, info)
+    version = getModVersion(fn, info)
 
     original, ext = os.path.splitext(fn)
 
