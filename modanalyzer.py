@@ -204,7 +204,7 @@ def getModVersion(fn, info):
         return down["version"]
 
     # no such luck with mcmod.. try to infer from filename
-    m = re.match(r".*?([\d.]+)", fn)
+    m = re.match(r".*?([\d.]+)", fn) # TODO: make a better effort to deal with weird version strings
     if m:
         return m.group(1)
 

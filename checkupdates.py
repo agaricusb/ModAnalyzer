@@ -18,8 +18,8 @@ def lookupRemoteModVersion(modids, remoteMods):
     return None
 
 def compareLocalMods(remoteMods):
-    FORMAT = "%-20s\t%-20s\t%s %s"
-    print FORMAT % ("REMOTE", "LOCAL", "", "")
+    FORMAT = "%s %-20s\t%-20s\t%s %s"
+    print FORMAT % (" ", "REMOTE", "LOCAL", "", "")
     for fn in os.listdir(ALL_MODS_DIR):
         path = os.path.join(ALL_MODS_DIR, fn)
         info = modanalyzer.readMcmodInfo(path)
@@ -28,7 +28,14 @@ def compareLocalMods(remoteMods):
 
         remoteVersion = lookupRemoteModVersion(modid, remoteMods)
 
-        print FORMAT % (remoteVersion, version, path, modid)
+        # mark if versions differ
+        # TODO: only if greater
+        if remoteVersion != version:
+            tag = "*"
+        else:
+            tag = " "
+
+        print FORMAT % (tag, remoteVersion, version, path, modid)
 
 def main():
     data = file("/Users/admin/Downloads/1.5.1.json").read()#urllib2.urlopen(BOT_URL % (MC_VERSION,)).read()
