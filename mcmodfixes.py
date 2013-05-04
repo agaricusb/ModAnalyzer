@@ -76,7 +76,26 @@ USES_UNSHIFTED_ITEM_IDS = [
     "immibis-*",
     ]
 
+# convert "name" on http://bot.notenoughmods.com/1.5.1.html to internal mod ID, when they don't match
 NEM_TO_MODID = {
+    "bau5_ProjectBench": "ProjectBench",
+    "TheBarrelsMod": "barrels",
+    "Buildcraft": "BuildCraft|Core",
+    "CustomMobSpawner": "CustomSpawner",
+    "Mo'Creatures": "MoCreatures",
+    "EquivalentExchange3": "EE3",
+    "GravityGun": "GraviGun",
+    "GregTech": "GregTech_Addon",
+    "NuclearControl": "IC2NuclearControl",
+    "Immibis'sMicroblocks": "ImmibisMicroblocks",
+    "Immibis'sPeripherals": "u'ImmibisPeripherals",
+    "IndustrialCraft2": "IC2",
+    "IronChests": "IronChest",
+    "AdvancedSolarPanels": "AdvancedSolarPanel",
+    "ModularPowersuits": "mmmPowersuits",
+    "ModularPowersuits-Addons": "u'PowersuitAddons",
+    "NEIMystcraftPlugin": "NEI-Mystcraft-Plugin",
+    "TinkersConstruct": "TConstruct",
     }
 
 def getExtraDeps(mod):

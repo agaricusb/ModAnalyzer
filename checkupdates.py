@@ -11,8 +11,13 @@ import urllib2
 import json
 
 import modanalyzer
+import mcmodfixes
 
 def compareName2ModID(name, modid):
+    if name.lower() == modid.lower(): return True
+    if name.lower() == modid.lower().replace("mod_", ""): return True
+
+    name = mcmodfixes.fixNotEnoughModsName(name)
     if name.lower() == modid.lower(): return True
     if name.lower() == modid.lower().replace("mod_", ""): return True
 
