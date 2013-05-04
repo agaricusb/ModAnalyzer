@@ -76,6 +76,9 @@ USES_UNSHIFTED_ITEM_IDS = [
     "immibis-*",
     ]
 
+NEM_TO_MODID = {
+    }
+
 def getExtraDeps(mod):
     for k, v in DEP_ADDITIONS.iteritems():
         if mod.startswith(k):
@@ -118,4 +121,7 @@ def usesUnshiftedItemIDs(fn):
         if fn.startswith(k):
             return True
     return False
+
+def fixNotEnoughModsName(name):
+    return NEM_TO_MODID.get(name, name)
 

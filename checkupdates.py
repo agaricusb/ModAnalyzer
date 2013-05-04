@@ -1,4 +1,6 @@
-#!/usr/bin/pytho
+#!/usr/bin/python
+
+# Check the NotEnoughMods mod list to compare the latest versions of mods with your versions
 
 MC_VERSION = "1.5.1"
 BOT_URL = "http://bot.notenoughmods.com/%s.json"
@@ -10,16 +12,21 @@ import json
 
 import modanalyzer
 
+def compareName2ModID(name, modid):
+    if name.lower() == modid.lower(): return True
+
+    return False
+
 def lookupRemoteModVersion(modids, remoteMods):
     for mod in remoteMods:
         for modid in modids:
-            if mod["name"] == modid:
+            if compareName2ModID(mod["name"], modid):
                 return mod["version"]
     return None
 
 def compareLocalMods(remoteMods):
     FORMAT = "%s %-20s\t%-20s\t%s %s"
-    print FORMAT % (" ", "REMOTE", "LOCAL", "", "")
+    print FORMAT % (" ", "REMOTE (Latest)", "LOCAL", "", "")
     for fn in os.listdir(ALL_MODS_DIR):
         path = os.path.join(ALL_MODS_DIR, fn)
         info = modanalyzer.readMcmodInfo(path)
