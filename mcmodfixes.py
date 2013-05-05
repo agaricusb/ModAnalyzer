@@ -97,6 +97,7 @@ NEM_TO_MODID = {
     "ModularPowersuits-Addons": "u'PowersuitAddons",
     "NEIMystcraftPlugin": "NEI-Mystcraft-Plugin",
     "TinkersConstruct": "TConstruct",
+    "EnchantingPlus": "eplus",
     }
 
 def getExtraDeps(mod):
