@@ -9,6 +9,7 @@ ALL_MODS_DIR = "allmods"
 import os
 import urllib2
 import json
+import sys
 
 import modanalyzer
 import mcmodfixes
@@ -30,31 +31,41 @@ def lookupRemoteModVersion(modids, remoteMods):
                 return mod["version"]
     return None
 
-def compareLocalMods(remoteMods):
+def compareLocalMods(remoteMods, localRoots):
     FORMAT = "%s %-20s\t%-20s\t%s %s"
     print FORMAT % (" ", "REMOTE (Latest)", "LOCAL", "", "")
-    for fn in os.listdir(ALL_MODS_DIR):
-        path = os.path.join(ALL_MODS_DIR, fn)
-        info = modanalyzer.readMcmodInfo(path)
-        version = modanalyzer.getModVersion(fn, info)
-        modid = modanalyzer.getModIDs(fn, info)
+    for localRoot in localRoots:
+        for fn in os.listdir(localRoot):
+            if fn.startswith("."): continue
+            if os.path.isdir(os.path.join(localRoot, fn)): continue
+            if not fn.endswith(".zip") and not fn.endswith(".jar"): continue
 
-        remoteVersion = lookupRemoteModVersion(modid, remoteMods)
+            path = os.path.join(localRoot, fn)
+            info = modanalyzer.readMcmodInfo(path)
+            version = modanalyzer.getModVersion(fn, info)
+            modid = modanalyzer.getModIDs(fn, info)
 
-        # mark if versions differ
-        # TODO: only if greater
-        if remoteVersion != version:
-            tag = "*"
-        else:
-            tag = " "
+            remoteVersion = lookupRemoteModVersion(modid, remoteMods)
 
-        print FORMAT % (tag, remoteVersion, version, path, modid)
+            # mark if versions differ
+            # TODO: only if greater
+            if remoteVersion != version:
+                tag = "*"
+            else:
+                tag = " "
+
+            print FORMAT % (tag, remoteVersion, version, path, modid)
 
 def main():
+    if len(sys.argv) == 1:
+        localRoots = [ALL_MODS_DIR]
+    else:
+        localRoots = sys.argv[1:]
+
     data = file("/Users/admin/Downloads/1.5.1.json").read()#urllib2.urlopen(BOT_URL % (MC_VERSION,)).read()
     remoteMods = json.loads(data)
 
-    compareLocalMods(remoteMods)
+    compareLocalMods(remoteMods, localRoots)
 
 if __name__ == "__main__":
     main()
