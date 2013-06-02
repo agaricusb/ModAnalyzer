@@ -15,10 +15,11 @@ import modanalyzer
 import mcmodfixes
 
 def compareName2ModID(name, modid):
+    print "compare",name,modid,
     if name.lower() == modid.lower(): return True
     if name.lower() == modid.lower().replace("mod_", ""): return True
 
-    name = mcmodfixes.fixNotEnoughModsName(name)
+    modid = mcmodfixes.fixNotEnoughModsName(modid)
     if name.lower() == modid.lower(): return True
     if name.lower() == modid.lower().replace("mod_", ""): return True
 
@@ -28,7 +29,10 @@ def lookupRemoteModVersion(modids, remoteMods):
     for mod in remoteMods:
         for modid in modids:
             if compareName2ModID(mod["name"], modid):
+                print "HIT"
                 return mod["version"]
+            print "NOT"
+
     return None
 
 def compareLocalMods(remoteMods, localRoots):
@@ -62,7 +66,8 @@ def main():
     else:
         localRoots = sys.argv[1:]
 
-    data = file("/Users/admin/Downloads/1.5.1.json").read()#urllib2.urlopen(BOT_URL % (MC_VERSION,)).read()
+    data = file("/Users/admin/Downloads/1.5.1.json").read()
+    #data = urllib2.urlopen(BOT_URL % (MC_VERSION,)).read()
     remoteMods = json.loads(data)
 
     compareLocalMods(remoteMods, localRoots)

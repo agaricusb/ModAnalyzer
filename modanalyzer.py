@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 MC_VERSION = "1.5.1"
-FORGE_VERSION = "7.7.2.682"
+FORGE_VERSION = "7.8.0.712"
 
 TEST_SERVER_ROOT = "temp-server"
 TEST_SERVER_FILE = "minecraft_server+forge.jar"
@@ -18,7 +18,10 @@ import mcmodfixes
 
 def setupServer(serverFilename):
     mcZip = getURLZip("http://assets.minecraft.net/%s/minecraft_server.jar" % (MC_VERSION.replace(".", "_"),))
-    forgeZip = getURLZip("http://files.minecraftforge.net/minecraftforge/minecraftforge-universal-%s-%s.zip" % (MC_VERSION, FORGE_VERSION))
+    if MC_VERSION == "1.5.1" and FORGE_VERSION == "7.8.0.712":
+        forgeZip = getURLZip("https://bitbucket.org/agaricusb/minecraftforge/downloads/minecraftforge-universal-1.5.1-7.8.0.712-1.5.1-dev-MCPC-R3.zip")
+    else:
+        forgeZip = getURLZip("http://files.minecraftforge.net/minecraftforge/minecraftforge-universal-%s-%s.zip" % (MC_VERSION, FORGE_VERSION))
 
     with zipfile.ZipFile(serverFilename, "w") as serverZip:
         for member in set(mcZip.namelist()) - set(forgeZip.namelist()):
