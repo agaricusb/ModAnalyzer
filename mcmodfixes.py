@@ -63,6 +63,7 @@ FILENAME_HAS_NO_VERSION = [
     "gregtechmod.zip", # "If you are unsure about your Version, look at the "mcmod.info" inside the zip, just open it with Notepad."
     "WeaponMod.zip",
     "Barrels 1.5+.jar",
+    "ArchimedesShips.zip",
     ]
 
 REQUIRES_EXTRACTION = {
